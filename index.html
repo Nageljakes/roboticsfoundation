@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>RoboCadet Junior! 🤖</title>
+<style>
+  :root {
+    --bg-grad: linear-gradient(135deg, #2b1055, #7597de);
+    --panel-bg: rgba(255, 255, 255, 0.95);
+    --primary: #ff477e;
+    --accent: #48bfe3;
+    --green: #52b788;
+    --yellow: #ffd166;
+    --text: #2d3142;
+    --font: 'Fredoka', 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Comic Sans MS", cursive, sans-serif;
+  }
+
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  body {
+    margin: 0;
+    padding: 10px;
+    font-family: var(--font);
+    background: var(--bg-grad);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  header {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    margin-bottom: 15px;
+  }
+
+  h1 { margin: 0; font-size: 1.6rem; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+
+  .header-btns { display: flex; gap: 8px; }
+  .icon-btn {
+    background: white; border: none; font-size: 1.2rem;
+    padding: 8px 12px; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.1s;
+  }
+  .icon-btn:active { transform: scale(0.95); }
+
+  /* Screens */
+  .screen {
+    width: 100%;
+    max-width: 900px;
+    background: var(--panel-bg);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+  }
+  .screen.active { display: flex; animation: popIn 0.3s ease-out; }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Coach Bubble */
+  .coach-speech {
+    background: #eef2ff;
+    border-left: 6px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #3f37c9;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .coach-speech .speak-icon { font-size: 1.5rem; }
+
+  /* WORKSHOP STYLES */
+  .workshop-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .bot-canvas-wrap {
+    background: radial-gradient(circle, #f0f4ff 40%, #dbe4ff 100%);
+    border: 4px solid var(--accent);
+    border-radius: 20px;
+    width: 320px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+
+  .tab-btn {
+    padding: 10px 16px;
+    border: 3px solid #dee2e6;
+    background: #f8f9fa;
+    border-radius: 14px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: #38a3d3;
+    transform: translateY(-2px);
+  }
+  .tab-btn.completed {
+    background: #d8f3dc;
+    border-color: #52b788;
+    color: #1b4332;
+  }
+  .tab-btn.locked {
+    opacity: 0.65;
+  }
+
+  .part-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .part-card {
+    background: white;
+    border: 3px solid #e9ecef;
+    border-radius: 16px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .part-card.selected {
+    border-color: var(--primary);
+    background: #fff0f5;
+    transform: scale(1.04);
+    box-shadow: 0 6px 15px rgba(255, 71, 126, 0.25);
+  }
+  .part-card span.part-icon { font-size: 2.2rem; }
+  .part-card span.part-name { font-size: 0.85rem; font-weight: bold; margin-top: 6px; }
+
+  /* CODING ARENA STYLES */
+  .arena-top {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .level-badge {
+    background: var(--yellow);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #723c00;
+  }
+
+  .arena-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  #grid {
+    display: grid;
+    background: #343a40;
+    padding: 10px;
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    border: 4px solid #495057;
+    position: relative;
+  }
+
+  .cell {
+    width: 62px;
+    height: 62px;
+    background: #495057;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 3px;
+    font-size: 2rem;
+    position: relative;
+    transition: background-color 0.2s;
+  }
+  .cell.goal { background: #38b000; animation: pulse 1.2s infinite; }
+  .cell.obstacle { background: #6c757d; }
+  .cell.star { background: #4a5568; }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 8px #52b788; }
+    50% { box-shadow: 0 0 20px #52b788; }
+  }
+
+  .bot-sprite {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+
+  /* Coding Controls Drawer */
+  .coding-controls {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .instruction-tape {
+    background: #f1f3f5;
+    border: 3px dashed #ced4da;
+    border-radius: 16px;
+    min-height: 75px;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 8px;
+    overflow-x: auto;
+  }
+  .tape-placeholder { color: #adb5bd; font-weight: bold; font-size: 0.95rem; }
+
+  .tape-block {
+    background: white;
+    border: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    min-width: 50px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: relative;
+    animation: popIn 0.2s;
+  }
+  .tape-block.running {
+    border-color: var(--primary);
+    background: #ffea79;
+    transform: scale(1.15);
+  }
+
+  .command-palette {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .cmd-btn {
+    background: white;
+    border: 3px solid #dee2e6;
+    border-radius: 16px;
+    padding: 12px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.1s, border-color 0.1s;
+  }
+  .cmd-btn:active { transform: scale(0.92); }
+  .cmd-btn .icon { font-size: 1.8rem; }
+  .cmd-btn .lbl { font-size: 0.75rem; margin-top: 4px; color: #495057; }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+  }
+
+  .big-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    transition: transform 0.1s;
+  }
+  .big-btn:active { transform: scale(0.96); }
+  .btn-run { background: var(--green); }
+  .btn-clear { background: #e63946; }
+  .btn-next { background: var(--primary); margin-top: 15px; }
+
+  /* WIN MODAL */
+  #modal-win {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .win-box {
+    background: white;
+    padding: 30px;
+    border-radius: 28px;
+    text-align: center;
+    max-width: 400px;
+    animation: popIn 0.3s;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  }
+  .win-stars { font-size: 3rem; margin: 10px 0; }
+
+  /* Coach Guide Modal */
+  #guide-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .guide-content {
+    background: white;
+    padding: 25px;
+    border-radius: 24px;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 RoboCadet Jr.</h1>
+  <div class="header-btns">
+    <button class="icon-btn" onclick="toggleVoice()" id="btn-voice" title="Voice Instructions">🔊 Voice: ON</button>
+    <button class="icon-btn" onclick="openGuide()" title="Parent Guide">👨‍🏫 Parent Guide</button>
+  </div>
+</header>
+
+<!-- SCREEN 1: BUILD A ROBOT -->
+<div id="screen-workshop" class="screen active">
+  <div class="coach-speech" onclick="speakCurrentCoach()">
+    <span class="speak-icon">🗣️</span>
+    <span id="workshop-coach-txt">First, choose a body frame for your robot!</span>
+  </div>
+
+  <div class="tabs" id="workshop-steps">
+    <!-- Step tabs rendered dynamically -->
+  </div>
+
+  <div class="workshop-container">
+    <div class="bot-canvas-wrap">
+      <svg id="bot-svg" width="260" height="260" viewBox="0 0 200 200"></svg>
+    </div>
+
+    <div class="part-options" id="part-picker">
+      <!-- Options injected by JS -->
+    </div>
+  </div>
+
+  <div class="workshop-nav" style="display: flex; gap: 12px; width: 100%; max-width: 420px; margin-top: 15px;">
+    <button id="btn-prev-step" class="big-btn" style="background: #6c757d; display: none;" onclick="prevWorkshopStep()">
+      ⬅️ Back
+    </button>
+    <button id="btn-next-step" class="big-btn btn-next" onclick="nextWorkshopStep()">
+      Next: Wheels ➔
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN 2: CODING ARENA -->
+<div id="screen-coding" class="screen">
+  <div class="arena-top">
+    <button class="icon-btn" onclick="goToWorkshop()">🛠️ Redesign Bot</button>
+    <div class="level-badge" id="level-indicator">Mission 1 of 5</div>
+  </div>
+
+  <div class="coach-speech" onclick="speakCurrentCoach()">
+    <span class="speak-icon">🗣️</span>
+    <span id="arena-coach-txt">Give your robot steps so it can reach the power battery!</span>
+  </div>
+
+  <div class="arena-layout">
+    <div id="grid"></div>
+
+    <div class="coding-controls">
+      <div style="font-weight: bold; font-size: 0.95rem; color:#495057;">Your Robot's Program (Sequence):</div>
+      <div class="instruction-tape" id="tape">
+        <span class="tape-placeholder">Tap commands below to add steps...</span>
+      </div>
+
+      <div class="command-palette">
+        <button class="cmd-btn" onclick="addCommand('F')">
+          <span class="icon">⬆️</span>
+          <span class="lbl">Go Forward</span>
+        </button>
+        <button class="cmd-btn" onclick="addCommand('L')">
+          <span class="icon">↪️</span>
+          <span class="lbl">Turn Left</span>
+        </button>
+        <button class="cmd-btn" onclick="addCommand('R')">
+          <span class="icon">↩️</span>
+          <span class="lbl">Turn Right</span>
+        </button>
+      </div>
+
+      <div class="action-buttons">
+        <button class="big-btn btn-clear" onclick="clearProgram()">❌ Reset Steps</button>
+        <button class="big-btn btn-run" id="btn-run" onclick="runProgram()">▶️ RUN CODE!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WIN CELEBRATION MODAL -->
+<div id="modal-win">
+  <div class="win-box">
+    <h2 style="margin: 0; color: #2b1055; font-size: 2rem;">MISSION ACCOMPLISHED!</h2>
+    <div class="win-stars">⭐⭐⭐</div>
+    <p id="win-desc" style="font-size: 1.15rem; color: #495057;">Your code guided the robot safely home!</p>
+    <button class="big-btn btn-next" style="width: 100%;" onclick="nextLevel()">Next Mission 🚀</button>
+  </div>
+</div>
+
+<!-- PARENT'S COACHING GUIDE MODAL -->
+<div id="guide-modal" onclick="closeGuide(event)">
+  <div class="guide-content">
+    <h2 style="margin-top:0; color:#3f37c9;">Parent Coaching Guide 💡</h2>
+    <p>This game uses the exact cognitive scaffolding recommended by early STEM educators to prepare a 5-year-old for robotics:</p>
+    <ul>
+      <li><strong>Hardware Components:</strong> Robots aren't magic. In the <em>Workshop</em>, discuss how computers need <strong>inputs</strong> (camera/sensors) and <strong>outputs</strong> (wheels/grippers).</li>
+      <li><strong>Sequential Logic:</strong> Computers can only execute instructions in exact chronological order (First step 1, then step 2).</li>
+      <li><strong>Relative Frame of Reference:</strong> Turning "Left" or "Right" is from the <em>Robot's perspective</em>, not the child's perspective. If she turns the wrong way, ask: <em>"Which hand is the robot's right hand?"</em></li>
+      <li><strong>Debugging:</strong> In robotics, errors are not failures! If the bot hits a rock or misses, say: <em>"You found a bug! Let's debug the sequence together!"</em></li>
+    </ul>
+    <button class="big-btn btn-next" style="width:100%;" onclick="document.getElementById('guide-modal').style.display='none'">Got it!</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   1. SOUND SYNTHESIZER (Web Audio API - Zero External Dependencies)
+   ===================================================================== */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.2) {
+  try {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+function sfxTap() { playTone(440, 'triangle', 0.08, 0.15); }
+function sfxMove() {
+  initAudio();
+  playTone(280, 'sine', 0.1, 0.15);
+  setTimeout(() => playTone(350, 'sine', 0.1, 0.15), 60);
+}
+function sfxTurn() { playTone(520, 'square', 0.08, 0.08); }
+function sfxBump() {
+  initAudio();
+  playTone(130, 'sawtooth', 0.25, 0.3);
+}
+function sfxWin() {
+  initAudio();
+  const notes = [261.6, 329.6, 392.0, 523.2];
+  notes.forEach((freq, idx) => {
+    setTimeout(() => playTone(freq, 'triangle', 0.3, 0.25), idx * 120);
+  });
+}
+
+/* =====================================================================
+   2. TEXT-TO-SPEECH (Spoken Coach for Emerging Readers)
+   ===================================================================== */
+let voiceEnabled = true;
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  document.getElementById('btn-voice').innerText = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
+  if (!voiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function speak(text) {
+  if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel(); // Stop earlier talking
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 0.95; // Gentle pace for children
+  utter.pitch = 1.25; // Friendly higher voice
+  window.speechSynthesis.speak(utter);
+}
+
+function speakCurrentCoach() {
+  const activeScreen = document.querySelector('.screen.active').id;
+  const txt = activeScreen === 'screen-workshop'
+    ? document.getElementById('workshop-coach-txt').innerText
+    : document.getElementById('arena-coach-txt').innerText;
+  speak(txt);
+}
+
+/* =====================================================================
+   3. ROBOT WORKSHOP (Anatomy & Parts)
+   ===================================================================== */
+const robotConfig = {
+  chassis: 'round',    // round, square, capsule
+  locomotion: 'wheels',// wheels, treads, legs
+  sensors: 'visor',    // visor, dual, radar
+  tools: 'claws',      // claws, gripper, magnet
+  color: '#48bfe3'
+};
+
+const partsCatalog = {
+  chassis: [
+    { id: 'round', name: 'Bubble Body', icon: '🔵', desc: 'A smooth, lightweight body for agility!' },
+    { id: 'square', name: 'Armored Box', icon: '🟧', desc: 'Strong metal frame to protect internal chips!' },
+    { id: 'capsule', name: 'Cyber Pod', icon: '💊', desc: 'Aerodynamic shape built for tight spaces!' }
+  ],
+  locomotion: [
+    { id: 'wheels', name: 'Twin Wheels', icon: '🛞', desc: 'Motors turn wheels for high speed on flat floors!' },
+    { id: 'treads', name: 'Tank Treads', icon: '🚜', desc: 'Heavy duty treads to climb steep bumps!' },
+    { id: 'legs', name: 'Walker Legs', icon: '🦵', desc: 'Articulated robotic legs to step over obstacles!' }
+  ],
+  sensors: [
+    { id: 'visor', name: 'Camera Eyes', icon: '🥽', desc: 'Vision sensors see colors and measure distances!' },
+    { id: 'dual', name: 'Sonar Antennas', icon: '📡', desc: 'Ultrasonic sensors listen to bouncing echoes!' },
+    { id: 'radar', name: 'Laser Dome', icon: '🚨', desc: 'LIDAR rotates around to map nearby objects!' }
+  ],
+  tools: [
+    { id: 'claws', name: 'Pincer Claws', icon: '🦀', desc: 'Mechanical grippers pick up energy spheres!' },
+    { id: 'hands', name: 'Bionic Hands', icon: '🦾', desc: 'Flexible fingers for pushing levers and buttons!' },
+    { id: 'magnet', name: 'Electro-Magnet', icon: '🧲', desc: 'Powerful magnetic field attracts batteries!' }
+  ]
+};
+
+const workshopSteps = ['chassis', 'locomotion', 'sensors', 'tools'];
+let currentStepIdx = 0;
+let currentTab = 'chassis';
+
+const stepPrompts = {
+  chassis: { title: "Step 1 of 4: Body (Chassis)", coach: "First, choose a body frame for your robot!" },
+  locomotion: { title: "Step 2 of 4: Wheels (Motors)", coach: "Now, choose how your robot will move!" },
+  sensors: { title: "Step 3 of 4: Eyes (Sensors)", coach: "Next, choose sensors so your robot can see and hear!" },
+  tools: { title: "Step 4 of 4: Hands (Actuators)", coach: "Finally, choose hands so your robot can interact with things!" }
+};
+
+function setWorkshopStep(idx) {
+  currentStepIdx = Math.max(0, Math.min(idx, workshopSteps.length - 1));
+  currentTab = workshopSteps[currentStepIdx];
+  
+  renderWorkshopTabs();
+  renderPartPicker();
+
+  const prompt = stepPrompts[currentTab];
+  document.getElementById('workshop-coach-txt').innerText = prompt.coach;
+  speak(prompt.coach);
+
+  const prevBtn = document.getElementById('btn-prev-step');
+  const nextBtn = document.getElementById('btn-next-step');
+
+  if (currentStepIdx === 0) {
+    prevBtn.style.display = 'none';
+  } else {
+    prevBtn.style.display = 'flex';
+  }
+
+  if (currentStepIdx === workshopSteps.length - 1) {
+    nextBtn.innerHTML = '⚡ Ready to Code! 🚀';
+    nextBtn.className = 'big-btn btn-next';
+  } else {
+    const nextLabels = ["Wheels ➔", "Eyes ➔", "Hands ➔"];
+    nextBtn.innerHTML = `Next: ${nextLabels[currentStepIdx]}`;
+    nextBtn.className = 'big-btn btn-next';
+  }
+}
+
+function nextWorkshopStep() {
+  if (currentStepIdx < workshopSteps.length - 1) {
+    sfxTap();
+    setWorkshopStep(currentStepIdx + 1);
+  } else {
+    goToCodingArena();
+  }
+}
+
+function prevWorkshopStep() {
+  if (currentStepIdx > 0) {
+    sfxTap();
+    setWorkshopStep(currentStepIdx - 1);
+  }
+}
+
+function renderWorkshopTabs() {
+  const tabsContainer = document.getElementById('workshop-steps');
+  if (!tabsContainer) return;
+  tabsContainer.innerHTML = '';
+
+  const stepTitles = ['1. Body', '2. Wheels', '3. Eyes', '4. Hands'];
+
+  workshopSteps.forEach((stepKey, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn';
+    if (idx === currentStepIdx) {
+      btn.classList.add('active');
+    } else if (idx < currentStepIdx) {
+      btn.classList.add('completed');
+    } else {
+      btn.classList.add('locked');
+    }
+    btn.innerHTML = `${idx < currentStepIdx ? '✅ ' : ''}${stepTitles[idx]}`;
+    btn.onclick = () => {
+      if (idx <= currentStepIdx + 1) {
+        sfxTap();
+        setWorkshopStep(idx);
+      }
+    };
+    tabsContainer.appendChild(btn);
+  });
+}
+
+function renderPartPicker() {
+  const container = document.getElementById('part-picker');
+  container.innerHTML = '';
+  const parts = partsCatalog[currentTab];
+
+  parts.forEach(part => {
+    const card = document.createElement('div');
+    card.className = `part-card ${robotConfig[currentTab] === part.id ? 'selected' : ''}`;
+    card.innerHTML = `
+      <span class="part-icon">${part.icon}</span>
+      <span class="part-name">${part.name}</span>
+    `;
+    card.onclick = () => {
+      sfxTap();
+      robotConfig[currentTab] = part.id;
+      renderPartPicker();
+      renderRobotSVG();
+      document.getElementById('workshop-coach-txt').innerText = part.desc;
+      speak(part.desc);
+    };
+    container.appendChild(card);
+  });
+}
+
+function renderRobotSVG() {
+  const svg = document.getElementById('bot-svg');
+  let locomotionSVG = '';
+  let chassisSVG = '';
+  let sensorSVG = '';
+  let toolSVG = '';
+
+  // 1. Locomotion
+  if (robotConfig.locomotion === 'wheels') {
+    locomotionSVG = `
+      <circle cx="55" cy="155" r="22" fill="#2b2d42" />
+      <circle cx="55" cy="155" r="10" fill="#8d99ae" />
+      <circle cx="145" cy="155" r="22" fill="#2b2d42" />
+      <circle cx="145" cy="155" r="10" fill="#8d99ae" />
+    `;
+  } else if (robotConfig.locomotion === 'treads') {
+    locomotionSVG = `
+      <rect x="35" y="145" width="130" height="30" rx="14" fill="#343a40" />
+      <circle cx="55" cy="160" r="10" fill="#adb5bd" />
+      <circle cx="100" cy="160" r="10" fill="#adb5bd" />
+      <circle cx="145" cy="160" r="10" fill="#adb5bd" />
+    `;
+  } else { // Legs
+    locomotionSVG = `
+      <path d="M 60 135 L 45 175 L 30 175" stroke="#343a40" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <path d="M 140 135 L 155 175 L 170 175" stroke="#343a40" stroke-width="8" stroke-linecap="round" fill="none"/>
+    `;
+  }
+
+  // 2. Chassis
+  if (robotConfig.chassis === 'round') {
+    chassisSVG = `
+      <circle cx="100" cy="95" r="50" fill="${robotConfig.color}" stroke="#1d3557" stroke-width="6"/>
+      <circle cx="100" cy="95" r="38" fill="#ffffff" opacity="0.25"/>
+    `;
+  } else if (robotConfig.chassis === 'square') {
+    chassisSVG = `
+      <rect x="55" y="50" width="90" height="90" rx="16" fill="${robotConfig.color}" stroke="#1d3557" stroke-width="6"/>
+      <rect x="70" y="65" width="60" height="60" rx="8" fill="#ffffff" opacity="0.25"/>
+    `;
+  } else { // Capsule
+    chassisSVG = `
+      <rect x="65" y="45" width="70" height="95" rx="35" fill="${robotConfig.color}" stroke="#1d3557" stroke-width="6"/>
+      <ellipse cx="100" cy="80" rx="22" ry="26" fill="#ffffff" opacity="0.25"/>
+    `;
+  }
+
+  // 3. Sensors (Eyes/Head)
+  if (robotConfig.sensors === 'visor') {
+    sensorSVG = `
+      <rect x="72" y="70" width="56" height="22" rx="10" fill="#111" />
+      <rect x="76" y="74" width="48" height="14" rx="7" fill="#00f5d4" />
+      <circle cx="88" cy="81" r="3" fill="#fff" />
+      <circle cx="112" cy="81" r="3" fill="#fff" />
+    `;
+  } else if (robotConfig.sensors === 'dual') {
+    sensorSVG = `
+      <line x1="80" y1="50" x2="65" y2="25" stroke="#1d3557" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="65" cy="25" r="8" fill="#ff477e" />
+      <line x1="120" y1="50" x2="135" y2="25" stroke="#1d3557" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="135" cy="25" r="8" fill="#ff477e" />
+      <circle cx="85" cy="80" r="8" fill="#222" /><circle cx="85" cy="80" r="3" fill="#fff" />
+      <circle cx="115" cy="80" r="8" fill="#222" /><circle cx="115" cy="80" r="3" fill="#fff" />
+    `;
+  } else { // Radar
+    sensorSVG = `
+      <path d="M 85 46 A 16 16 0 0 1 115 46 Z" fill="#ffd166" stroke="#1d3557" stroke-width="4"/>
+      <circle cx="100" cy="78" r="16" fill="#222"/>
+      <circle cx="100" cy="78" r="8" fill="#ff477e"/>
+      <circle cx="102" cy="76" r="3" fill="#fff"/>
+    `;
+  }
+
+  // 4. Tools (Arms/Hands)
+  if (robotConfig.tools === 'claws') {
+    toolSVG = `
+      <!-- Left Claw -->
+      <path d="M 52 95 Q 30 95 28 115" stroke="#1d3557" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M 22 110 Q 30 118 20 128" stroke="#ff477e" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <!-- Right Claw -->
+      <path d="M 148 95 Q 170 95 172 115" stroke="#1d3557" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M 178 110 Q 170 118 180 128" stroke="#ff477e" stroke-width="5" fill="none" stroke-linecap="round"/>
+    `;
+  } else if (robotConfig.tools === 'hands') {
+    toolSVG = `
+      <line x1="50" y1="95" x2="25" y2="105" stroke="#1d3557" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="20" cy="107" r="9" fill="#ffd166"/>
+      <line x1="150" y1="95" x2="175" y2="105" stroke="#1d3557" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="180" cy="107" r="9" fill="#ffd166"/>
+    `;
+  } else { // Magnet
+    toolSVG = `
+      <line x1="50" y1="95" x2="25" y2="110" stroke="#1d3557" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 15 110 A 10 10 0 0 1 35 110" stroke="#e63946" stroke-width="6" fill="none"/>
+      <line x1="150" y1="95" x2="175" y2="110" stroke="#1d3557" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 165 110 A 10 10 0 0 1 185 110" stroke="#e63946" stroke-width="6" fill="none"/>
+    `;
+  }
+
+  svg.innerHTML = locomotionSVG + chassisSVG + toolSVG + sensorSVG;
+}
+
+/* =====================================================================
+   4. CODING ARENA (Sequencing & Spatial Orientation)
+   ===================================================================== */
+const levels = [
+  {
+    size: 4,
+    start: { x: 0, y: 1, dir: 1 }, // Facing East (Right)
+    goal: { x: 3, y: 1 },
+    obstacles: [],
+    hint: "Mission 1: Direct path! Tell the robot to Move Forward 3 times!"
+  },
+  {
+    size: 4,
+    start: { x: 0, y: 3, dir: 0 }, // Facing North (Up)
+    goal: { x: 2, y: 1 },
+    obstacles: [{ x: 0, y: 1 }, { x: 1, y: 1 }],
+    hint: "Mission 2: Obstacles ahead! Move Up, Turn Right, then Move to the Battery!"
+  },
+  {
+    size: 4,
+    start: { x: 0, y: 3, dir: 0 }, // Facing North
+    goal: { x: 3, y: 0 },
+    obstacles: [{ x: 1, y: 3 }, { x: 1, y: 2 }, { x: 1, y: 1 }],
+    hint: "Mission 3: A tall wall! Go around it using Left and Right turns!"
+  },
+  {
+    size: 5,
+    start: { x: 0, y: 4, dir: 0 },
+    goal: { x: 4, y: 0 },
+    obstacles: [{ x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 3, y: 3 }],
+    hint: "Mission 4: Zig-zag maze! Think carefully about the robot's left and right hand!"
+  },
+  {
+    size: 5,
+    start: { x: 2, y: 4, dir: 0 },
+    goal: { x: 2, y: 0 },
+    obstacles: [{ x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }],
+    hint: "Final Challenge: The bridge is blocked! Find a safe path around the barrier!"
+  }
+];
+
+let currentLevelIdx = 0;
+let botState = { x: 0, y: 0, dir: 0 }; // 0: Up, 1: Right, 2: Down, 3: Left
+let program = [];
+let isExecuting = false;
+
+function loadLevel(idx) {
+  currentLevelIdx = idx;
+  const lvl = levels[idx];
+  botState = { ...lvl.start };
+  program = [];
+  renderTape();
+  renderGrid();
+  document.getElementById('level-indicator').innerText = `Mission ${idx + 1} of ${levels.length}`;
+  document.getElementById('arena-coach-txt').innerText = lvl.hint;
+  speak(lvl.hint);
+}
+
+function renderGrid() {
+  const lvl = levels[currentLevelIdx];
+  const gridEl = document.getElementById('grid');
+  gridEl.style.gridTemplateColumns = `repeat(${lvl.size}, 62px)`;
+  gridEl.innerHTML = '';
+
+  for (let r = 0; r < lvl.size; r++) {
+    for (let c = 0; c < lvl.size; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.id = `cell-${c}-${r}`;
+
+      if (c === lvl.goal.x && r === lvl.goal.y) {
+        cell.classList.add('goal');
+        cell.innerHTML = '🔋';
+      } else if (lvl.obstacles.some(ob => ob.x === c && ob.y === r)) {
+        cell.classList.add('obstacle');
+        cell.innerHTML = '🪨';
+      }
+      gridEl.appendChild(cell);
+    }
+  }
+
+  // Robot Sprite on grid
+  updateRobotSprite();
+}
+
+function updateRobotSprite() {
+  let sprite = document.getElementById('bot-sprite-el');
+  if (!sprite) {
+    sprite = document.createElement('div');
+    sprite.id = 'bot-sprite-el';
+    sprite.className = 'bot-sprite';
+    sprite.innerHTML = `<svg id="mini-bot-svg" width="46" height="46" viewBox="0 0 200 200"></svg>`;
+    document.getElementById('grid').appendChild(sprite);
+  }
+
+  // Sync mini bot SVG with custom workshop build
+  document.getElementById('mini-bot-svg').innerHTML = document.getElementById('bot-svg').innerHTML;
+
+  const targetCell = document.getElementById(`cell-${botState.x}-${botState.y}`);
+  if (targetCell) {
+    sprite.style.left = `${targetCell.offsetLeft + 5}px`;
+    sprite.style.top = `${targetCell.offsetTop + 5}px`;
+
+    // Rotate according to direction (0: 0deg, 1: 90deg, 2: 180deg, 3: 270deg)
+    const angles = [0, 90, 180, 270];
+    sprite.style.transform = `rotate(${angles[botState.dir]}deg)`;
+  }
+}
+
+/* =====================================================================
+   5. COMMAND SEQUENCE & RUNNER
+   ===================================================================== */
+function addCommand(cmd) {
+  if (isExecuting) return;
+  if (program.length >= 10) {
+    speak("Memory is full! Let's test this sequence first.");
+    return;
+  }
+  sfxTap();
+  program.push(cmd);
+  renderTape();
+}
+
+function clearProgram() {
+  if (isExecuting) return;
+  sfxTap();
+  program = [];
+  const lvl = levels[currentLevelIdx];
+  botState = { ...lvl.start };
+  updateRobotSprite();
+  renderTape();
+}
+
+function renderTape() {
+  const tape = document.getElementById('tape');
+  tape.innerHTML = '';
+  if (program.length === 0) {
+    tape.innerHTML = '<span class="tape-placeholder">Tap commands below to add steps...</span>';
+    return;
+  }
+
+  program.forEach((cmd, i) => {
+    const block = document.createElement('div');
+    block.className = 'tape-block';
+    block.id = `tape-${i}`;
+    block.innerText = cmd === 'F' ? '⬆️' : (cmd === 'L' ? '↪️' : '↩️');
+    tape.appendChild(block);
+  });
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function shakeRobot() {
+  const sprite = document.getElementById('mini-bot-svg');
+  if (sprite) {
+    sprite.style.transition = 'transform 0.1s';
+    sprite.style.transform = 'translate(6px, 0)';
+    setTimeout(() => sprite.style.transform = 'translate(-6px, 0)', 100);
+    setTimeout(() => sprite.style.transform = 'translate(6px, 0)', 200);
+    setTimeout(() => sprite.style.transform = 'translate(0, 0)', 300);
+  }
+}
+
+async function runProgram() {
+  if (isExecuting || program.length === 0) return;
+  isExecuting = true;
+  document.getElementById('btn-run').style.opacity = '0.5';
+
+  const lvl = levels[currentLevelIdx];
+  botState = { ...lvl.start };
+  updateRobotSprite();
+  await sleep(400);
+
+  const dx = [0, 1, 0, -1];
+  const dy = [-1, 0, 1, 0];
+
+  for (let i = 0; i < program.length; i++) {
+    // Highlight active code step
+    document.querySelectorAll('.tape-block').forEach(b => b.classList.remove('running'));
+    const activeBlock = document.getElementById(`tape-${i}`);
+    if (activeBlock) activeBlock.classList.add('running');
+
+    const cmd = program[i];
+    if (cmd === 'F') {
+      const nx = botState.x + dx[botState.dir];
+      const ny = botState.y + dy[botState.dir];
+
+      // Check bounds & obstacles
+      const hitWall = nx < 0 || nx >= lvl.size || ny < 0 || ny >= lvl.size;
+      const hitRock = lvl.obstacles.some(ob => ob.x === nx && ob.y === ny);
+
+      if (hitWall || hitRock) {
+        sfxBump();
+        shakeRobot();
+        speak("Beep boop! Sensor detected an obstacle. Debug your code and try again!");
+        document.getElementById('arena-coach-txt').innerText = "Oops, an obstacle! Adjust your commands!";
+        
+        // Reset state so user can clear and try again
+        isExecuting = false;
+        document.getElementById('btn-run').style.opacity = '1';
+        return; 
+      } else {
+        botState.x = nx;
+        botState.y = ny;
+        sfxMove();
+        updateRobotSprite();
+      }
+    } else if (cmd === 'L') {
+      botState.dir = (botState.dir + 3) % 4; // Counter-clockwise turn
+      sfxTurn();
+      updateRobotSprite();
+    } else if (cmd === 'R') {
+      botState.dir = (botState.dir + 1) % 4; // Clockwise turn
+      sfxTurn();
+      updateRobotSprite();
+    }
+
+    await sleep(650); // Pause for young eyes to trace the movement
+
+    // Check victory condition immediately after each step!
+    if (botState.x === lvl.goal.x && botState.y === lvl.goal.y) {
+      document.querySelectorAll('.tape-block').forEach(b => b.classList.remove('running'));
+      if (activeBlock) activeBlock.classList.add('running');
+      sfxWin();
+      triggerWin();
+      isExecuting = false;
+      document.getElementById('btn-run').style.opacity = '1';
+      return;
+    }
+  }
+
+  // Finished all steps without reaching the battery
+  speak("Robot finished the steps, but didn't reach the battery! Let's add more commands!");
+  document.getElementById('arena-coach-txt').innerText = "Almost there! Add more steps to reach the battery!";
+
+  // Finished sequence execution
+  document.querySelectorAll('.tape-block').forEach(b => b.classList.remove('running'));
+  isExecuting = false;
+  document.getElementById('btn-run').style.opacity = '1';
+}
+
+/* =====================================================================
+   6. UI NAVIGATION & MODALS
+   ===================================================================== */
+function triggerWin() {
+  document.getElementById('modal-win').style.display = 'flex';
+  speak("Mission Accomplished! You are a brilliant engineer!");
+}
+
+function nextLevel() {
+  document.getElementById('modal-win').style.display = 'none';
+  if (currentLevelIdx < levels.length - 1) {
+    loadLevel(currentLevelIdx + 1);
+  } else {
+    // Game completed!
+    const grid = document.getElementById('grid');
+    grid.style.display = 'block';
+    grid.innerHTML = '<h2 style="color:white; text-align:center; padding: 20px;">🏆 CHAMPION! 🏆<br><br>All missions complete!</h2>';
+    document.getElementById('level-indicator').innerText = 'Champion!';
+    document.getElementById('arena-coach-txt').innerText = 'You are an official Robot Cadet!';
+    speak("Incredible job! You have completed all the robot missions. You are an official Robot Cadet!");
+  }
+}
+
+function goToCodingArena() {
+  document.getElementById('screen-workshop').classList.remove('active');
+  document.getElementById('screen-coding').classList.add('active');
+  loadLevel(currentLevelIdx);
+}
+
+function goToWorkshop() {
+  document.getElementById('screen-coding').classList.remove('active');
+  document.getElementById('screen-workshop').classList.add('active');
+  setWorkshopStep(0);
+}
+
+function openGuide() {
+  document.getElementById('guide-modal').style.display = 'flex';
+}
+
+function closeGuide(event) {
+  if (event.target === document.getElementById('guide-modal')) {
+    document.getElementById('guide-modal').style.display = 'none';
+  }
+}
+
+// Initial Boot
+window.onload = () => {
+  setWorkshopStep(0);
+  renderRobotSVG();
+  window.addEventListener('resize', () => {
+    if (document.getElementById('screen-coding').classList.contains('active')) {
+      updateRobotSprite();
+    }
+  });
+};
+</script>
+</body>
+</html>
