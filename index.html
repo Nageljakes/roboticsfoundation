@@ -869,6 +869,7 @@ function renderGrid() {
   const lvl = levels[currentLevelIdx];
   const gridEl = document.getElementById('grid');
   gridEl.style.gridTemplateColumns = `repeat(${lvl.size}, 62px)`;
+  gridEl.style.display = 'grid'; // Reset display (champion screen sets it to 'block')
   gridEl.innerHTML = '';
 
   for (let r = 0; r < lvl.size; r++) {
@@ -921,7 +922,7 @@ function updateRobotSprite() {
    ===================================================================== */
 function addCommand(cmd) {
   if (isExecuting) return;
-  if (program.length >= 10) {
+  if (program.length >= 16) {
     speak("Memory is full! Let's test this sequence first.");
     return;
   }
@@ -1005,8 +1006,9 @@ async function runProgram() {
         shakeRobot();
         speak("Beep boop! Sensor detected an obstacle. Debug your code and try again!");
         document.getElementById('arena-coach-txt').innerText = "Oops, an obstacle! Adjust your commands!";
-        
+
         // Reset state so user can clear and try again
+        document.querySelectorAll('.tape-block').forEach(b => b.classList.remove('running'));
         isExecuting = false;
         document.getElementById('btn-run').style.opacity = '1';
         return; 
