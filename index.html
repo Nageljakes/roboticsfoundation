@@ -69,6 +69,17 @@
   .lang-btn{font-size:1.3rem;padding:14px 26px;opacity:.65}
   .lang-btn.sel{opacity:1;outline:5px solid #fff;transform:scale(1.05)}
   .lang-hint{color:#cfd6ff;font-weight:800;font-size:.95rem;margin:2px 0 0}
+  .games{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:8px 0 4px;width:100%;max-width:980px}
+  .game-card{background:rgba(255,255,255,.96);border-radius:26px;padding:18px 18px 20px;width:min(430px,92vw);text-align:center;box-shadow:0 14px 30px rgba(0,0,0,.4)}
+  .game-card .g-ic{font-size:3rem}
+  .game-card h2{margin:6px 0 2px;font-size:1.6rem;color:#2b1055}
+  .game-card p{margin:0 0 10px;color:#495057;font-weight:700}
+  .game-card .stars{font-size:1.1rem;font-weight:900;color:#8a6200;margin-bottom:12px}
+  .game-card .big{width:100%}
+  .repeat-row{display:flex;gap:8px;align-items:center;justify-content:center;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35);border-radius:16px;padding:8px 10px;margin-bottom:10px;flex-wrap:wrap}
+  .repeat-row .lbl{color:#fff;font-weight:900}
+  .rep{min-width:52px;padding:8px 10px;border-radius:12px;background:#fff;font-weight:900;border:3px solid transparent}
+  .rep.sel{border-color:var(--sun);background:#fff3c7;transform:scale(1.08)}
 
   /* ---------- Map ---------- */
   .hero-badge{display:flex;align-items:center;gap:10px}
@@ -233,7 +244,23 @@
     <button class="big blue lang-btn" id="btn-lang-en">🇬🇧 English</button>
     <button class="big pink lang-btn" id="btn-lang-af">🇿🇦 Afrikaans</button>
   </div>
-  <button class="big gold play-btn" id="btn-play">▶ PLAY</button>
+  <p class="lang-hint" id="game-hint">Choose a game / Kies 'n speletjie:</p>
+  <div class="games">
+    <div class="game-card">
+      <div class="g-ic">🤖</div>
+      <h2 id="gc-rc-name">RoboCadet</h2>
+      <p id="gc-rc-desc">Guide your robot with step-by-step code!</p>
+      <div class="stars">⭐ <span id="gc-rc-stars">0</span>/24</div>
+      <button class="big gold play-btn" id="btn-play-rc">▶ PLAY</button>
+    </div>
+    <div class="game-card">
+      <div class="g-ic">🔁</div>
+      <h2 id="gc-rr-name">Repeat Racers</h2>
+      <p id="gc-rr-desc">Lazy-smart coding: build it once, repeat it!</p>
+      <div class="stars">⭐ <span id="gc-rr-stars">0</span>/12</div>
+      <button class="big pink play-btn" id="btn-play-rr">▶ PLAY</button>
+    </div>
+  </div>
   <div class="tiny-links">
     <button class="chip btn" id="btn-guide-title">👨‍🏫 Parent Guide</button>
     <button class="chip btn" id="btn-voice-title">🔊 Voice: ON</button>
@@ -244,12 +271,13 @@
 <!-- ======================= MAP ======================= -->
 <section id="screen-map" class="screen">
   <div class="topbar">
+    <button class="chip btn" id="btn-hub-back">🏠 Games</button>
     <div class="hero-badge">
       <div class="face" id="map-face"></div>
       <div class="nm"><span id="map-name">Cadet Chloe</span><small id="map-sub">ROBOT ACADEMY</small></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-      <span class="chip star">⭐ <span id="star-total">0</span>/24</span>
+      <span class="chip star">⭐ <span id="star-total">0</span>/<span id="star-max">24</span></span>
       <button class="chip btn" id="btn-to-workshop">🛠️ Workshop</button>
       <button class="chip btn" id="btn-lang-map" title="Language / Taal">🇬🇧 EN</button>
       <button class="chip btn" id="btn-voice-map">🔊</button>
@@ -295,6 +323,13 @@
     <div id="gridwrap"><div id="grid"></div></div>
     <div class="controls">
       <div class="lbl-small" id="prog-label">My robot's program:</div>
+      <div class="repeat-row" id="repeat-row" style="display:none">
+        <span class="lbl" id="repeat-label">🔁 Repeat my program:</span>
+        <button class="rep" data-n="1">×1</button>
+        <button class="rep" data-n="2">×2</button>
+        <button class="rep" data-n="3">×3</button>
+        <button class="rep" data-n="4">×4</button>
+      </div>
       <div class="tape" id="tape"></div>
       <div class="palette" id="palette"></div>
       <div class="actions">
@@ -344,16 +379,18 @@
    ===================================================================== */
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const SAVE_KEY = 'robocadet_chloe_v2';
+const SAVE_KEY = 'robocadet_chloe_v3';
 let save = {
   stars: [0,0,0,0,0,0,0,0],
+  stars2: [0,0,0,0],
   cfg: { chassis:'round', locomotion:'wheels', sensors:'visor', tools:'claws', color:'#48bfe3' },
   voice: true, music: true, lang: 'en'
 };
 function loadSave(){
   try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || localStorage.getItem('robocadet_chloe_v1'));
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || localStorage.getItem('robocadet_chloe_v2') || localStorage.getItem('robocadet_chloe_v1'));
     if (s) { save = Object.assign(save, s); save.cfg = Object.assign({chassis:'round',locomotion:'wheels',sensors:'visor',tools:'claws',color:'#48bfe3'}, save.cfg); }
+    if (!Array.isArray(save.stars2) || save.stars2.length !== 4) save.stars2 = [0,0,0,0];
     if (save.lang !== 'af' && save.lang !== 'en') save.lang = 'en';
   } catch(e){}
 }
@@ -411,6 +448,11 @@ en: {
   musicOn:"🎵 Music: ON", musicOff:"🔕 Music: OFF",
   cadet:"Cadet Chloe", academy:"ROBOT ACADEMY", workshop:"🛠️ Workshop",
   missions:"🗺️ Missions", map:"🗺️ Map", wsTitle:"🛠️ Robot Workshop",
+  hub:"🏠 Games", gameHint:"Choose a game / Kies 'n speletjie:",
+  rcName:"RoboCadet", rcDesc:"Guide your robot with step-by-step code!",
+  rrName:"Repeat Racers", rrDesc:"Lazy-smart coding: build it once, repeat it!",
+  race:(a,b)=>`Race ${a} of ${b}`, repeatLabel:"🔁 Repeat my program:",
+  tooLong:"Whoa, that's a very long program! Build a shorter one and use repeat.",
   back:"⬅️ Back", next:"Next ➔", ready:"🚀 Ready!", progLabel:"My robot's program:",
   tapePh:"Tap the buttons to add steps…", reset:"❌ Reset", undo:"⌫ Undo", help:"💡 Help", run:"▶ RUN CODE!",
   goF:"Go Forward", turnL:"Turn Left", turnR:"Turn Right",
@@ -426,7 +468,7 @@ en: {
     "<b>Stars:</b> 3 stars = the shortest program. Replaying for fewer steps teaches efficiency.",
     "<b>Privacy:</b> Works fully offline. Progress is saved only on this device, with no accounts and no tracking."
   ],
-  worlds:["Meadow Lab","Crystal Caves","Star Station"],
+  worlds:["Meadow Lab","Crystal Caves","Star Station","Loop Lagoon"],
   mapNew:"Pick mission one to start, Cadet Chloe!",
   mapBack:"Welcome back, Cadet Chloe! Pick a mission.",
   locked:"Finish the last mission first!",
@@ -466,6 +508,18 @@ en: {
     "Star Station! Follow the twisty path to the battery.",
     "The final mission! Two big walls. Find the gaps to reach the battery."
   ],
+  rrHints:[
+    "Race 1! Build ONE step forward, then repeat it 3 times to reach the battery.",
+    "Race 2! Two dashes make the trip. Build the dash once, repeat it twice!",
+    "Race 3! Loop around the corner! Build forward-then-turn once, then repeat!",
+    "Final race! Around the rocks! Build the bend once, repeat it to the battery."
+  ],
+  rrTips:[
+    "Tap Forward once, then tap ×3 below your program!",
+    "Tap Forward Forward, then tap ×2!",
+    "Tap Forward, Turn Right, then tap ×3!",
+    "Tap Forward Forward Turn Right, then tap ×3!"
+  ],
   parts:{
     chassis:[["Bubble Body","A round bubble body! Smooth and speedy."],["Armored Box","An armored box! A strong metal frame protects the computer chips inside."],["Cyber Pod","A cyber pod! Perfect for squeezing through tight spaces."]],
     locomotion:[["Twin Wheels","Twin wheels! Motors spin the wheels so your robot can zoom along flat floors."],["Tank Treads","Tank treads! They are great for climbing over bumpy ground."],["Walker Legs","Walker legs! Your robot can step over things, just like you do."]],
@@ -479,6 +533,11 @@ af: {
   musicOn:"🎵 Musiek: AAN", musicOff:"🔕 Musiek: AF",
   cadet:"Kadet Chloé", academy:"ROBOT-AKADEMIE", workshop:"🛠️ Werkswinkel",
   missions:"🗺️ Missies", map:"🗺️ Kaart", wsTitle:"🛠️ Robot-werkswinkel",
+  hub:"🏠 Speletjies", gameHint:"Choose a game / Kies 'n speletjie:",
+  rcName:"RoboCadet", rcDesc:"Lei jou robot met stap-vir-stap kode!",
+  rrName:"Repeat Racers", rrDesc:"Slim-lui kodering: bou dit een keer, herhaal dit!",
+  race:(a,b)=>`Resies ${a} van ${b}`, repeatLabel:"🔁 Herhaal my program:",
+  tooLong:"Sjoe, dit is 'n baie lang program! Bou 'n korter een en gebruik herhaal.",
   back:"⬅️ Terug", next:"Volgende ➔", ready:"🚀 Gereed!", progLabel:"My robot se program:",
   tapePh:"Tik op die knoppies om stappe by te voeg…", reset:"❌ Begin oor", undo:"⌫ Maak ongedaan", help:"💡 Hulp", run:"▶ LAAT LOOP!",
   goF:"Ry Vooruit", turnL:"Draai Links", turnR:"Draai Regs",
@@ -494,7 +553,7 @@ af: {
     "<b>Sterre:</b> 3 sterre = die kortste program. Speel weer met minder stappe om doeltreffendheid te leer.",
     "<b>Privaatheid:</b> Werk heeltemal vanlyn. Vordering word net op hierdie toestel gestoor, met geen rekeninge en geen nasporing nie."
   ],
-  worlds:["Weiveld-laboratorium","Kristalgrotte","Sterstasie"],
+  worlds:["Weiveld-laboratorium","Kristalgrotte","Sterstasie","Luslagune"],
   mapNew:"Kies missie een om te begin, Kadet Chloé!",
   mapBack:"Welkom terug, Kadet Chloé! Kies 'n missie.",
   locked:"Voltooi eers die vorige missie!",
@@ -533,6 +592,18 @@ af: {
     "Jou robot kyk na die kristal! Draai eers, dan sig-sag tot by die battery.",
     "Sterstasie! Volg die kronkelpad tot by die battery.",
     "Die laaste missie! Twee groot mure. Vind die gapings tot by die battery."
+  ],
+  rrHints:[
+    "Resies 1! Bou EEN stap vorentoe, herhaal dit dan 3 keer tot by die battery.",
+    "Resies 2! Twee naartjies maak die rit. Bou die naartjie een keer, herhaal dit twee keer!",
+    "Resies 3! Draai om die hoek! Bou vorentoe-dan-draai een keer, herhaal dan!",
+    "Laaste resies! Om die rotse! Bou die draai een keer, herhaal dit tot by die battery."
+  ],
+  rrTips:[
+    "Tik een keer Vorentoe, tik dan ×3 onder jou program!",
+    "Tik Vorentoe Vorentoe, tik dan ×2!",
+    "Tik Vorentoe, Draai Regs, tik dan ×3!",
+    "Tik Vorentoe Vorentoe Draai Regs, tik dan ×3!"
   ],
   parts:{
     chassis:[["Borrellyf","'n Ronde borrellyf! Glad en vinnig."],["Pantserboks","'n Pantserboks! 'n Sterk metaalraam beskerm die rekenaarsjirpies binne."],["Kuberpeul","'n Kuberpeul! Perfek om deur nou plekkies te glip."]],
@@ -607,6 +678,8 @@ function refreshToggles(){
   ['#btn-lang-map','#btn-lang-ws','#btn-lang-arena'].forEach(s=>{ const el=$(s); if(el) el.textContent=langChip; });
   $('#btn-lang-en').classList.toggle('sel', save.lang==='en');
   $('#btn-lang-af').classList.toggle('sel', save.lang==='af');
+  $('#gc-rc-stars').textContent = save.stars.reduce((a,b) => a+b, 0);
+  $('#gc-rr-stars').textContent = save.stars2.reduce((a,b) => a+b, 0);
 }
 function toggleVoice(){ save.voice = !save.voice; if (!save.voice){ if ('speechSynthesis' in window) speechSynthesis.cancel(); stopAudio(); } persist(); refreshToggles(); sfx.tap(); }
 function toggleMusic(){ save.music = !save.music; save.music ? startMusic() : stopMusic(); persist(); refreshToggles(); sfx.tap(); }
@@ -620,8 +693,15 @@ function setLang(lang){
 function applyLang(){
   $('#title-sub').textContent = T('sub');
   $('#lang-hint').textContent = T('choose');
-  $('#btn-play').textContent = T('play');
+  $('#game-hint').textContent = T('gameHint');
+  $('#gc-rc-name').textContent = T('rcName');
+  $('#gc-rc-desc').textContent = T('rcDesc');
+  $('#gc-rr-name').textContent = T('rrName');
+  $('#gc-rr-desc').textContent = T('rrDesc');
+  $('#btn-play-rc').textContent = T('play');
+  $('#btn-play-rr').textContent = T('play');
   $('#btn-guide-title').textContent = T('guide');
+  $('#btn-hub-back').textContent = T('hub');
   $('#map-name').textContent = T('cadet');
   $('#map-sub').textContent = T('academy');
   $('#btn-to-workshop').textContent = T('workshop');
@@ -630,6 +710,7 @@ function applyLang(){
   $('#ws-prev').textContent = T('back');
   $('#btn-arena-back').textContent = T('map');
   $('#prog-label').textContent = T('progLabel');
+  $('#repeat-label').textContent = T('repeatLabel');
   $('#btn-reset').textContent = T('reset');
   $('#btn-undo').textContent = T('undo');
   $('#btn-hint').textContent = T('help');
@@ -642,7 +723,7 @@ function applyLang(){
   // re-render current screen text without speaking
   if ($('#screen-map').classList.contains('active')) renderMap(true);
   if ($('#screen-workshop').classList.contains('active')){ renderWsTabs(); renderWsParts(); renderPodium(); $('#ws-txt').textContent = STR[save.lang].wsSay[wsIdx]; $('#ws-next').textContent = wsIdx === wsSteps.length-1 ? T('ready') : T('next'); }
-  if ($('#screen-arena').classList.contains('active')){ renderTape(); renderPalette(); $('#arena-title').textContent = T('mission')(levelIdx+1, LEVELS.length); $('#arena-txt').textContent = STR[save.lang].hints[levelIdx]; }
+  if ($('#screen-arena').classList.contains('active')){ renderTape(); renderPalette(); renderRepeat(); const lvls = curLevels(); $('#arena-title').textContent = gameMode === 'rr' ? T('race')(levelIdx+1, lvls.length) : T('mission')(levelIdx+1, lvls.length); $('#arena-txt').textContent = gameMode === 'rr' ? STR[save.lang].rrHints[levelIdx] : STR[save.lang].hints[levelIdx]; }
 }
 
 /* =====================================================================
@@ -932,8 +1013,29 @@ const LEVELS = [
 const WORLDS = [
   { id:1, name:'Meadow Lab', icon:'🌼', rock:'🪨' },
   { id:2, name:'Crystal Caves', icon:'💎', rock:'🔮' },
-  { id:3, name:'Star Station', icon:'🚀', rock:'☄️' }
+  { id:3, name:'Star Station', icon:'🚀', rock:'☄️' },
+  { id:4, name:'Loop Lagoon', icon:'🔁', rock:'🪨' }
 ];
+/* Game 2: REPEAT RACERS. Each race is won by building a SHORT unit and
+   repeating it. par.unit = longest tape that still earns 3 stars. */
+const LEVELS2 = [
+  { world:4, size:4, start:{x:0,y:2,dir:1}, goal:{x:3,y:2}, rocks:[], par:{unit:1},
+    unit:['F'], times:3 },
+  { world:4, size:5, start:{x:0,y:2,dir:1}, goal:{x:4,y:2}, rocks:[], par:{unit:2},
+    unit:['F','F'], times:2 },
+  { world:4, size:4, start:{x:0,y:0,dir:1}, goal:{x:0,y:1}, rocks:[{x:2,y:0},{x:2,y:1},{x:3,y:3}], par:{unit:2},
+    unit:['F','R'], times:3 },
+  { world:4, size:6, start:{x:0,y:0,dir:1}, goal:{x:0,y:2}, rocks:[{x:3,y:0},{x:3,y:1},{x:3,y:2},{x:3,y:3},{x:1,y:4},{x:4,y:4}], par:{unit:3},
+    unit:['F','F','R'], times:3 }
+];
+/* Suite state: 'rc' = RoboCadet, 'rr' = Repeat Racers. repeatN = repeat picker. */
+let gameMode = 'rc', repeatN = 1;
+function curLevels(){ return gameMode === 'rr' ? LEVELS2 : LEVELS; }
+function curStars(){ return gameMode === 'rr' ? save.stars2 : save.stars; }
+function curMax(){ return gameMode === 'rr' ? 12 : 24; }
+function totalStars(){ return save.stars.reduce((a,b) => a+b, 0) + save.stars2.reduce((a,b) => a+b, 0); }
+function expanded(){ const out = []; for (let n = 0; n < repeatN; n++) out.push(...program); return out; }
+function maxTape(){ return gameMode === 'rr' ? 8 : MAX_STEPS; }
 const DX = [0,1,0,-1], DY = [-1,0,1,0];
 const MAX_STEPS = 20;
 function blocked(lv, x, y){
@@ -974,22 +1076,24 @@ function simulate(lv, prog){
 /* =====================================================================
    6. MAP SCREEN
    ===================================================================== */
-function totalStars(){ return save.stars.reduce((a,b) => a+b, 0); }
-function unlocked(i){ return i === 0 || save.stars[i-1] > 0; }
+function unlocked(i){ const st = curStars(); return i === 0 || st[i-1] > 0; }
 function renderMap(silent){
-  $('#star-total').textContent = totalStars();
+  const lvls = curLevels(), st = curStars();
+  $('#star-total').textContent = st.reduce((a,b) => a+b, 0);
+  $('#star-max').textContent = curMax();
   const box = $('#worlds'); box.innerHTML = '';
-  let nextIdx = save.stars.findIndex(s => s === 0); if (nextIdx < 0) nextIdx = -1;
-  WORLDS.forEach(w => {
-    const el = document.createElement('div'); el.className = `world w${w.id}`;
+  let nextIdx = st.findIndex(s => s === 0); if (nextIdx < 0) nextIdx = -1;
+  const myWorlds = gameMode === 'rr' ? [4] : [1,2,3];
+  WORLDS.filter(w => myWorlds.includes(w.id)).forEach(w => {
+    const el = document.createElement('div'); el.className = `world w${w.id > 3 ? ((w.id-1) % 3) + 1 : w.id}`;
     el.innerHTML = `<h3>${w.icon} ${worldName(w.id)}</h3><div class="nodes"></div>`;
-    LEVELS.forEach((lv,i) => {
+    lvls.forEach((lv,i) => {
       if (lv.world !== w.id) return;
       const b = document.createElement('button');
-      const open = unlocked(i), st = save.stars[i];
+      const open = unlocked(i), n = st[i];
       b.className = 'node' + (!open ? ' locked' : '') + (i === nextIdx ? ' current' : '');
       b.innerHTML = open
-        ? `${i+1}<span class="st">${'⭐'.repeat(st)}${'☆'.repeat(3-st)}</span>`
+        ? `${i+1}<span class="st">${'⭐'.repeat(n)}${'☆'.repeat(3-n)}</span>`
         : `<span class="lock">🔒</span>`;
       b.onclick = () => {
         if (!open){ sfx.err(); speakId('locked', T('locked')); return; }
@@ -1000,9 +1104,14 @@ function renderMap(silent){
     box.appendChild(el);
   });
 }
+function openHub(){
+  showScreen('screen-title'); refreshToggles();
+  speakId(save.lang === 'af' ? 'hub-af' : 'hub-en',
+    save.lang === 'af' ? 'Kies ' + 'n speletjie, Kadet Kloei!' : 'Choose a game, Cadet Chloe!');
+}
 function openMap(){
   showScreen('screen-map'); renderMap();
-  const t = totalStars();
+  const t = curStars().reduce((a,b) => a+b, 0);
   const id = t === 0 ? 'map-new' : 'map-back';
   speakId(id, t === 0 ? T('mapNew') : T('mapBack'));
 }
@@ -1026,13 +1135,14 @@ function startLevel(i){
   levelIdx = i; showScreen('screen-arena'); updateAvatars(); loadLevel();
 }
 function loadLevel(){
-  const lv = LEVELS[levelIdx], w = WORLDS[lv.world-1];
-  program = []; busy = false; runToken++;
+  const lvls = curLevels();
+  const lv = lvls[levelIdx], w = WORLDS[lv.world-1];
+  program = []; repeatN = 1; busy = false; runToken++;
   bot = {...lv.start}; faceAngle = lv.start.dir * 90;
   cellPx = calcCell(lv.size);
   document.documentElement.style.setProperty('--cell', cellPx + 'px');
-  $('#arena-title').textContent = T('mission')(levelIdx+1, LEVELS.length);
-  const st = save.stars[levelIdx]; $('#arena-stars').textContent = '⭐'.repeat(st) + '☆'.repeat(3-st);
+  $('#arena-title').textContent = gameMode === 'rr' ? T('race')(levelIdx+1, lvls.length) : T('mission')(levelIdx+1, lvls.length);
+  const st = curStars()[levelIdx]; $('#arena-stars').textContent = '⭐'.repeat(st) + '☆'.repeat(3-st);
   const g = $('#grid'); g.className = `w${lv.world}`;
   g.style.gridTemplateColumns = `repeat(${lv.size}, ${cellPx}px)`;
   g.innerHTML = '';
@@ -1048,8 +1158,18 @@ function loadLevel(){
   b.innerHTML = `<div class="ring" id="ring"></div><div class="body">${robotSVG(save.cfg)}</div>`;
   g.appendChild(b);
   placeBot(true);
-  renderTape(); renderPalette();
-  sayId('arena', `mission-${levelIdx}`, lvlHint(levelIdx));
+  renderTape(); renderPalette(); renderRepeat();
+  if (gameMode === 'rr') sayId('arena', `rr-hint-${levelIdx}`, STR[save.lang].rrHints[levelIdx]);
+  else sayId('arena', `mission-${levelIdx}`, lvlHint(levelIdx));
+}
+function renderRepeat(){
+  const row = $('#repeat-row');
+  if (!row) return;
+  row.style.display = gameMode === 'rr' ? 'flex' : 'none';
+  row.querySelectorAll('.rep').forEach(b => {
+    b.classList.toggle('sel', +b.dataset.n === repeatN);
+    b.onclick = () => { if (busy) return; sfx.tap(); repeatN = +b.dataset.n; renderRepeat(); };
+  });
 }
 function placeBot(instant){
   const b = $('#bot'), ring = $('#ring'); if (!b) return;
@@ -1078,24 +1198,26 @@ function renderTape(badIdx = -1, runIdx = -1){
 }
 function addCmd(c){
   if (busy) return;
-  if (program.length >= MAX_STEPS){ sfx.err(); sayId('arena','mem-full', T('memFull')); return; }
+  if (program.length >= maxTape()){ sfx.err(); sayId('arena','mem-full', T('memFull')); return; }
   sfx.tap(); program.push(c); renderTape();
 }
 function resetBot(){
-  const lv = LEVELS[levelIdx]; bot = {...lv.start}; faceAngle = lv.start.dir * 90; placeBot(true);
+  const lv = curLevels()[levelIdx]; bot = {...lv.start}; faceAngle = lv.start.dir * 90; placeBot(true);
   $('#grid').classList.remove('shake');
 }
 $('#btn-reset').onclick = () => { if (busy) return; sfx.tap(); program = []; resetBot(); renderTape(); };
 $('#btn-undo').onclick = () => { if (busy || !program.length) return; sfx.tap(); program.pop(); renderTape(); };
 $('#btn-hint').onclick = () => {
   if (busy) return;
-  const lv = LEVELS[levelIdx], sim = simulate(lv, program);
+  const lv = curLevels()[levelIdx], prog = expanded(), sim = simulate(lv, prog);
   if (sim.crashAt >= 0){
-    renderTape(sim.crashAt); sfx.err();
-    sayId('arena', 'hint-crash', T('crashStep')(sim.crashAt+1));
+    const unitIdx = program.length ? sim.crashAt % program.length : 0;
+    renderTape(unitIdx); sfx.err();
+    sayId('arena', 'hint-crash', T('crashStep')(unitIdx+1));
     return;
   }
   if (sim.won){ sayId('arena', 'hint-ready', T('alreadyThere')); return; }
+  if (gameMode === 'rr'){ sayId('arena', `rr-tip-${levelIdx}`, STR[save.lang].rrTips[levelIdx]); return; }
   const path = solve(lv, sim.state);
   if (!path || !path.length){ sayId('arena', 'hint-reset', T('resetTry')); return; }
   const nxt = path[0], el = $(`#cmd-${nxt}`);
@@ -1107,13 +1229,15 @@ $('#btn-run').onclick = runProgram;
 
 async function runProgram(){
   if (busy || !program.length) return;
-  const lv = LEVELS[levelIdx]; busy = true; const token = ++runToken;
+  const lv = curLevels()[levelIdx], prog = expanded();
+  if (prog.length > 32){ sfx.err(); sayId('arena', 'rr-long', T('tooLong')); return; }
+  busy = true; const token = ++runToken;
   resetBot(); renderTape(); await sleep(400);
   const alive = () => token === runToken;
-  for (let i = 0; i < program.length; i++){
+  for (let i = 0; i < prog.length; i++){
     if (!alive()) return;
-    renderTape(-1, i);
-    const c = program[i];
+    renderTape(-1, i % program.length);
+    const c = prog[i];
     if (c === 'F'){
       const nx = bot.x + DX[bot.dir], ny = bot.y + DY[bot.dir];
       if (blocked(lv, nx, ny)){
@@ -1124,7 +1248,7 @@ async function runProgram(){
         placeBot();
         const g = $('#grid'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake');
         const r = b.getBoundingClientRect(); burst(r.left + r.width/2, r.top + r.height/2, 14, ['#ff9a9a','#ffd166','#fff']);
-        renderTape(i);
+        renderTape(i % program.length);
         sayId('arena', 'bonk', T('bonk'));
         busy = false; return;
       }
@@ -1134,7 +1258,7 @@ async function runProgram(){
     }
     await sleep(700);
     if (!alive()) return;
-    if (bot.x === lv.goal.x && bot.y === lv.goal.y){ renderTape(-1, i); await winLevel(i+1); return; }
+    if (bot.x === lv.goal.x && bot.y === lv.goal.y){ renderTape(-1, i % program.length); await winLevel(i+1); return; }
   }
   renderTape(); busy = false;
   sayId('arena', 'almost', T('almost'));
@@ -1144,18 +1268,25 @@ async function runProgram(){
    8. WIN / GRADUATION
    ===================================================================== */
 async function winLevel(stepsUsed){
-  const lv = LEVELS[levelIdx], opt = (solve(lv) || []).length;
-  const stars = stepsUsed <= opt ? 3 : (stepsUsed <= opt + 2 ? 2 : 1);
-  const prev = save.stars[levelIdx]; save.stars[levelIdx] = Math.max(prev, stars); persist();
-  $('#arena-stars').textContent = '⭐'.repeat(save.stars[levelIdx]) + '☆'.repeat(3 - save.stars[levelIdx]);
+  const lvls = curLevels(), lv = lvls[levelIdx];
+  let stars, opt = -1;
+  if (gameMode === 'rr'){
+    const u = program.length, par = lv.par.unit;
+    stars = u <= par ? 3 : (u <= par + 2 ? 2 : 1);
+  } else {
+    opt = (solve(lv) || []).length;
+    stars = stepsUsed <= opt ? 3 : (stepsUsed <= opt + 2 ? 2 : 1);
+  }
+  const bucket = curStars(); const prev = bucket[levelIdx]; bucket[levelIdx] = Math.max(prev, stars); persist();
+  $('#arena-stars').textContent = '⭐'.repeat(bucket[levelIdx]) + '☆'.repeat(3 - bucket[levelIdx]);
   const goalEl = $(`#c-${lv.goal.x}-${lv.goal.y}`); const r = goalEl.getBoundingClientRect();
   sfx.win(); burst(r.left + r.width/2, r.top + r.height/2, 60); await sleep(500);
   confetti();
-  const last = levelIdx === LEVELS.length - 1;
+  const last = levelIdx === lvls.length - 1;
   $('#win-chloe-wrap').innerHTML = chloeSVG({pose:'cheer'}).replace('class="chloe"', 'class="chloe win-chloe"');
   $('#win-title').textContent = last ? T('gradTitle') : T('winTitle');
   const msgs = {
-    3: stepsUsed === opt ? T('win3opt') : T('win3'),
+    3: gameMode === 'rr' ? T('win3') : (stepsUsed === opt ? T('win3opt') : T('win3')),
     2: T('win2'),
     1: T('win1')
   };
@@ -1164,7 +1295,7 @@ async function winLevel(stepsUsed){
   if (last){
     cert.style.display = 'block';
     cert.innerHTML = `<div class="cert"><h3>${T('certOff')}</h3><div class="nm">${T('certName')}</div><h3>${T('certGrad')}</h3>
-      <div style="font-size:.9rem;color:#8a6200;margin-top:4px">${new Date().toLocaleDateString(save.lang==='af'?'af-ZA':'en-ZA',{day:'numeric',month:'long',year:'numeric'})} · ⭐ ${totalStars()}/24</div></div>`;
+      <div style="font-size:.9rem;color:#8a6200;margin-top:4px">${new Date().toLocaleDateString(save.lang==='af'?'af-ZA':'en-ZA',{day:'numeric',month:'long',year:'numeric'})} · ⭐ ${totalStars()}/36</div></div>`;
   } else cert.style.display = 'none';
   $('#win-next').textContent = last ? T('toMap') : T('nextBtn');
   $('#win-replay').textContent = T('again');
@@ -1176,18 +1307,23 @@ async function winLevel(stepsUsed){
 $('#win-replay').onclick = () => { $('#modal-win').classList.remove('show'); sfx.tap(); loadLevel(); };
 $('#win-next').onclick = () => {
   $('#modal-win').classList.remove('show'); sfx.tap();
-  if (levelIdx < LEVELS.length - 1) loadLevel_next(); else openMap();
+  if (levelIdx < curLevels().length - 1) loadLevel_next(); else openMap();
 };
 function loadLevel_next(){ levelIdx++; loadLevel(); }
 
 /* =====================================================================
    9. NAVIGATION + BOOT
    ===================================================================== */
-$('#btn-play').onclick = () => {
-  audio(); sfx.pick(); startMusic();
-  const first = totalStars() === 0 && JSON.stringify(save.cfg) === JSON.stringify({chassis:'round',locomotion:'wheels',sensors:'visor',tools:'claws',color:'#48bfe3'});
-  if (first){ openWorkshop('screen-map'); } else { updateAvatars(); openMap(); }
+function defaultCfg(){ return {chassis:'round',locomotion:'wheels',sensors:'visor',tools:'claws',color:'#48bfe3'}; }
+$('#btn-play-rc').onclick = () => {
+  audio(); sfx.pick(); startMusic(); updateAvatars(); gameMode = 'rc';
+  const first = totalStars() === 0 && JSON.stringify(save.cfg) === JSON.stringify(defaultCfg());
+  if (first){ openWorkshop('screen-map'); } else { openMap(); }
 };
+$('#btn-play-rr').onclick = () => {
+  audio(); sfx.pick(); startMusic(); updateAvatars(); gameMode = 'rr'; openMap();
+};
+$('#btn-hub-back').onclick = () => { sfx.tap(); runToken++; busy = false; openHub(); };
 $('#btn-lang-en').onclick = () => { audio(); sfx.pick(); setLang('en'); };
 $('#btn-lang-af').onclick = () => { audio(); sfx.pick(); setLang('af'); };
 ['#btn-lang-map','#btn-lang-ws','#btn-lang-arena'].forEach(s=>{ $(s).onclick = () => { sfx.tap(); setLang(save.lang==='en'?'af':'en'); }; });
@@ -1205,7 +1341,7 @@ $('#btn-guide-close').onclick = () => $('#modal-guide').classList.remove('show')
 $('#modal-guide').onclick = e => { if (e.target.id === 'modal-guide') $('#modal-guide').classList.remove('show'); };
 addEventListener('resize', () => {
   if ($('#screen-arena').classList.contains('active') && !busy){
-    const lv = LEVELS[levelIdx]; cellPx = calcCell(lv.size);
+    const lv = curLevels()[levelIdx]; cellPx = calcCell(lv.size);
     document.documentElement.style.setProperty('--cell', cellPx + 'px');
     $('#grid').style.gridTemplateColumns = `repeat(${lv.size}, ${cellPx}px)`; placeBot(true);
   }

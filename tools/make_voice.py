@@ -85,6 +85,17 @@ LINES = [
     ("color-3", "sunny yellow! What a great color.", "sonniggeel! Wat 'n mooi kleur."),
     ("color-4", "purple! What a great color.", "pers! Wat 'n mooi kleur."),
     ("color-5", "orange! What a great color.", "oranje! Wat 'n mooi kleur."),
+    ("hub-en", "Choose a game, Cadet Chloe!", None),
+    ("hub-af", None, "Kies 'n speletjie, Kadet Kloei!"),
+    ("rr-hint-0", "Race 1! Build ONE step forward, then repeat it 3 times to reach the battery.", "Resies 1! Bou EEN stap vorentoe, herhaal dit dan 3 keer tot by die battery."),
+    ("rr-hint-1", "Race 2! Two dashes make the trip. Build the dash once, repeat it twice!", "Resies 2! Twee naartjies maak die rit. Bou die naartjie een keer, herhaal dit twee keer!"),
+    ("rr-hint-2", "Race 3! Loop around the corner! Build forward-then-turn once, then repeat!", "Resies 3! Draai om die hoek! Bou vorentoe-dan-draai een keer, herhaal dan!"),
+    ("rr-hint-3", "Final race! Around the rocks! Build the bend once, repeat it to the battery.", "Laaste resies! Om die rotse! Bou die draai een keer, herhaal dit tot by die battery."),
+    ("rr-tip-0", "Tap Forward once, then tap times 3 below your program!", "Tik een keer Vorentoe, tik dan 3 keer onder jou program!"),
+    ("rr-tip-1", "Tap Forward Forward, then tap times 2!", "Tik Vorentoe Vorentoe, tik dan 2 keer!"),
+    ("rr-tip-2", "Tap Forward, Turn Right, then tap times 3!", "Tik Vorentoe, Draai Regs, tik dan 3 keer!"),
+    ("rr-tip-3", "Tap Forward Forward Turn Right, then tap times 3!", "Tik Vorentoe Vorentoe Draai Regs, tik dan 3 keer!"),
+    ("rr-long", "Whoa, that's a very long program! Build a shorter one and use repeat.", "Sjoe, dit is 'n baie lang program! Bou 'n korter een en gebruik herhaal."),
 ]
 
 
