@@ -65,6 +65,10 @@
   .play-btn{font-size:1.9rem;padding:18px 46px;animation:pulseBtn 1.6s ease-in-out infinite}
   @keyframes pulseBtn{50%{transform:scale(1.06)}}
   .tiny-links{display:flex;gap:10px;margin-top:10px;justify-content:center;flex-wrap:wrap}
+  .lang-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:10px 0 4px}
+  .lang-btn{font-size:1.3rem;padding:14px 26px;opacity:.65}
+  .lang-btn.sel{opacity:1;outline:5px solid #fff;transform:scale(1.05)}
+  .lang-hint{color:#cfd6ff;font-weight:800;font-size:.95rem;margin:2px 0 0}
 
   /* ---------- Map ---------- */
   .hero-badge{display:flex;align-items:center;gap:10px}
@@ -218,11 +222,16 @@
 <!-- ======================= TITLE ======================= -->
 <section id="screen-title" class="screen active">
   <h1 class="logo">ROBOCADET</h1>
-  <p class="logo-sub">Chloe's Robot Academy</p>
+  <p class="logo-sub" id="title-sub">Chloe's Robot Academy</p>
   <div class="hero-row">
     <div class="platform"></div>
     <div class="hero-chloe" id="title-chloe"></div>
     <div class="hero-bot" id="title-bot"></div>
+  </div>
+  <p class="lang-hint" id="lang-hint">Choose your language / Kies jou taal:</p>
+  <div class="lang-row">
+    <button class="big blue lang-btn" id="btn-lang-en">🇬🇧 English</button>
+    <button class="big pink lang-btn" id="btn-lang-af">🇿🇦 Afrikaans</button>
   </div>
   <button class="big gold play-btn" id="btn-play">▶ PLAY</button>
   <div class="tiny-links">
@@ -237,11 +246,12 @@
   <div class="topbar">
     <div class="hero-badge">
       <div class="face" id="map-face"></div>
-      <div class="nm">Cadet Chloe<small>ROBOT ACADEMY</small></div>
+      <div class="nm"><span id="map-name">Cadet Chloe</span><small id="map-sub">ROBOT ACADEMY</small></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
       <span class="chip star">⭐ <span id="star-total">0</span>/24</span>
       <button class="chip btn" id="btn-to-workshop">🛠️ Workshop</button>
+      <button class="chip btn" id="btn-lang-map" title="Language / Taal">🇬🇧 EN</button>
       <button class="chip btn" id="btn-voice-map">🔊</button>
       <button class="chip btn" id="btn-music-map">🎵</button>
     </div>
@@ -253,8 +263,8 @@
 <section id="screen-workshop" class="screen">
   <div class="topbar">
     <button class="chip btn" id="btn-ws-back">🗺️ Missions</button>
-    <h2>🛠️ Robot Workshop</h2>
-    <span></span>
+    <h2 id="ws-title">🛠️ Robot Workshop</h2>
+    <button class="chip btn" id="btn-lang-ws" title="Language / Taal">🇬🇧 EN</button>
   </div>
   <div class="coach" id="ws-coach"><div class="coach-av" id="ws-av"></div><div class="coach-txt" id="ws-txt">Let's build your robot!</div><span class="spk">🗣️</span></div>
   <div class="stage">
@@ -275,13 +285,16 @@
   <div class="topbar">
     <button class="chip btn" id="btn-arena-back">🗺️ Map</button>
     <h2 id="arena-title">Mission 1</h2>
-    <span class="chip star" id="arena-stars">☆☆☆</span>
+    <span style="display:flex;gap:8px;align-items:center">
+      <button class="chip btn" id="btn-lang-arena" title="Language / Taal">🇬🇧 EN</button>
+      <span class="chip star" id="arena-stars">☆☆☆</span>
+    </span>
   </div>
   <div class="coach" id="arena-coach"><div class="coach-av" id="arena-av"></div><div class="coach-txt" id="arena-txt"></div><span class="spk">🗣️</span></div>
   <div class="arena">
     <div id="gridwrap"><div id="grid"></div></div>
     <div class="controls">
-      <div class="lbl-small">My robot's program:</div>
+      <div class="lbl-small" id="prog-label">My robot's program:</div>
       <div class="tape" id="tape"></div>
       <div class="palette" id="palette"></div>
       <div class="actions">
@@ -311,9 +324,9 @@
 
 <div class="modal" id="modal-guide">
   <div class="card guide">
-    <h2>Parent Coaching Guide 💡</h2>
-    <p>Everything here is built for a 5-year-old who is just starting out with robotics. Nothing needs reading, since the robot speaks every instruction.</p>
-    <ul>
+    <h2 id="guide-h">Parent Coaching Guide 💡</h2>
+    <p id="guide-intro">Everything here is built for a 5-year-old who is just starting out with robotics. Nothing needs reading, since the robot speaks every instruction.</p>
+    <ul id="guide-list">
       <li><b>Hardware:</b> In the Workshop, talk about <b>inputs</b> (eyes and sensors) and <b>outputs</b> (wheels and hands). Robots aren't magic, they are parts that work together.</li>
       <li><b>Sequencing:</b> Computers do step 1, then step 2, in exact order. Tap a step on the program tape to remove it.</li>
       <li><b>Left and right:</b> Turns are from the <b>robot's</b> point of view. The yellow arrow shows where it faces. Ask: <i>"Which is the robot's right hand?"</i></li>
@@ -331,14 +344,18 @@
    ===================================================================== */
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const SAVE_KEY = 'robocadet_chloe_v1';
+const SAVE_KEY = 'robocadet_chloe_v2';
 let save = {
   stars: [0,0,0,0,0,0,0,0],
   cfg: { chassis:'round', locomotion:'wheels', sensors:'visor', tools:'claws', color:'#48bfe3' },
-  voice: true, music: true
+  voice: true, music: true, lang: 'en'
 };
 function loadSave(){
-  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) { save = Object.assign(save, s); save.cfg = Object.assign({chassis:'round',locomotion:'wheels',sensors:'visor',tools:'claws',color:'#48bfe3'}, save.cfg); } } catch(e){}
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || localStorage.getItem('robocadet_chloe_v1'));
+    if (s) { save = Object.assign(save, s); save.cfg = Object.assign({chassis:'round',locomotion:'wheels',sensors:'visor',tools:'claws',color:'#48bfe3'}, save.cfg); }
+    if (save.lang !== 'af' && save.lang !== 'en') save.lang = 'en';
+  } catch(e){}
 }
 function persist(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e){} }
 
@@ -384,37 +401,249 @@ function startMusic(){
 }
 function stopMusic(){ if (musicTimer) clearInterval(musicTimer); musicTimer = null; }
 
-let voiceObj = null;
+/* =====================================================================
+   1b. LANGUAGES (GUI + voice follow one toggle)
+   ===================================================================== */
+const STR = {
+en: {
+  sub:"Chloe's Robot Academy", choose:"Choose your language / Kies jou taal:",
+  play:"▶ PLAY", guide:"👨‍🏫 Parent Guide", voiceOn:"🔊 Voice: ON", voiceOff:"🔇 Voice: OFF",
+  musicOn:"🎵 Music: ON", musicOff:"🔕 Music: OFF",
+  cadet:"Cadet Chloe", academy:"ROBOT ACADEMY", workshop:"🛠️ Workshop",
+  missions:"🗺️ Missions", map:"🗺️ Map", wsTitle:"🛠️ Robot Workshop",
+  back:"⬅️ Back", next:"Next ➔", ready:"🚀 Ready!", progLabel:"My robot's program:",
+  tapePh:"Tap the buttons to add steps…", reset:"❌ Reset", undo:"⌫ Undo", help:"💡 Help", run:"▶ RUN CODE!",
+  goF:"Go Forward", turnL:"Turn Left", turnR:"Turn Right",
+  mission:(a,b)=>`Mission ${a} of ${b}`, winTitle:"MISSION COMPLETE!", gradTitle:"🎓 YOU DID IT!",
+  again:"🔁 Again", nextBtn:"Next 🚀", toMap:"🗺️ Map", gotIt:"Got it!",
+  guideH:"Parent Coaching Guide 💡",
+  guideIntro:"Everything here is built for a 5-year-old who is just starting out with robotics. Nothing needs reading, since the robot speaks every instruction.",
+  guideList:[
+    "<b>Hardware:</b> In the Workshop, talk about <b>inputs</b> (eyes and sensors) and <b>outputs</b> (wheels and hands). Robots aren't magic, they are parts that work together.",
+    "<b>Sequencing:</b> Computers do step 1, then step 2, in exact order. Tap a step on the program tape to remove it.",
+    "<b>Left and right:</b> Turns are from the <b>robot's</b> point of view. The yellow arrow shows where it faces. Ask: <i>\"Which is the robot's right hand?\"</i>",
+    "<b>Debugging:</b> If the robot bumps a rock, say <i>\"You found a bug! Let's debug it together.\"</i> The 💡 Help button points at the next step to try.",
+    "<b>Stars:</b> 3 stars = the shortest program. Replaying for fewer steps teaches efficiency.",
+    "<b>Privacy:</b> Works fully offline. Progress is saved only on this device, with no accounts and no tracking."
+  ],
+  worlds:["Meadow Lab","Crystal Caves","Star Station"],
+  mapNew:"Pick mission one to start, Cadet Chloe!",
+  mapBack:"Welcome back, Cadet Chloe! Pick a mission.",
+  locked:"Finish the last mission first!",
+  memFull:"My memory is full! Let's test these steps first.",
+  crashStep:n=>`Step ${n} bumps into something. Tap the red step to remove it!`,
+  alreadyThere:"That already reaches the battery! Press RUN!",
+  resetTry:"Hmm, let's press Reset and try again.",
+  tryNext:w=>`Try ${w} next!`, tryFirst:w=>`Try ${w} first!`,
+  bonk:"Bonk! You found a bug. Debug time! Tap the red step, or press Help.",
+  almost:"Almost! Your robot stopped before the battery. Add more steps!",
+  win3opt:"Perfect! That is the shortest way possible!",
+  win3:"Three stars! Brilliant coding, Chloe!",
+  win2:"Great job! Can you find an even shorter way?",
+  win1:"You did it! Try again with fewer steps for more stars!",
+  winSpeakLast:"Congratulations Cadet Chloe! You are an official Robot Cadet! You graduated from Robot Academy!",
+  winSpeak3:"Mission complete! Three stars! You are a brilliant engineer!",
+  winSpeakOther:"Mission complete! Well done, Cadet Chloe!",
+  winText:"Your code got the robot home safely!",
+  certOff:"OFFICIAL", certName:"Robot Cadet Chloe", certGrad:"ROBOT ACADEMY GRADUATE",
+  wsTabs:["1. Body","2. Move","3. Eyes","4. Hands","5. Paint"],
+  wsSay:[
+    "Hello Cadet Chloe! First, choose a body for your robot.",
+    "Now choose how your robot will move!",
+    "Next, choose eyes and sensors so your robot can see and hear.",
+    "Now choose hands so your robot can pick things up.",
+    "Last step! Paint your robot your favourite color."
+  ],
+  colors:["sky blue","hot pink","lime green","sunny yellow","purple","orange"],
+  colorSay:c=>`${c}! What a great color.`,
+  hints:[
+    "Mission 1! Tell your robot to go forward to reach the battery.",
+    "Mission 2! Rocks are in the way. Go around them to the battery.",
+    "Mission 3! A tall wall of rocks. Climb up the side, then turn.",
+    "Welcome to the Crystal Caves! Think about your robot's left and right hand.",
+    "The bridge is blocked! Find a safe way around the crystals.",
+    "Your robot starts facing the crystal! Turn first, then zig zag to the battery.",
+    "Star Station! Follow the twisty path to the battery.",
+    "The final mission! Two big walls. Find the gaps to reach the battery."
+  ],
+  parts:{
+    chassis:[["Bubble Body","A round bubble body! Smooth and speedy."],["Armored Box","An armored box! A strong metal frame protects the computer chips inside."],["Cyber Pod","A cyber pod! Perfect for squeezing through tight spaces."]],
+    locomotion:[["Twin Wheels","Twin wheels! Motors spin the wheels so your robot can zoom along flat floors."],["Tank Treads","Tank treads! They are great for climbing over bumpy ground."],["Walker Legs","Walker legs! Your robot can step over things, just like you do."]],
+    sensors:[["Camera Eyes","Camera eyes! Cameras are a robot input. They help it see colors and shapes."],["Sonar Antennas","Sonar antennas! They listen for echoes, like a bat does."],["Laser Dome","A laser dome! It spins around to map everything nearby."]],
+    tools:[["Pincer Claws","Pincer claws! They can grab things, like a crab."],["Bionic Hands","Bionic hands! Fingers can push buttons and pull levers."],["Electro-Magnet","An electro-magnet! It pulls metal things closer."]]
+  }
+},
+af: {
+  sub:"Chloé se Robot-akademie", choose:"Choose your language / Kies jou taal:",
+  play:"▶ SPEEL", guide:"👨‍🏫 Ouergids", voiceOn:"🔊 Stem: AAN", voiceOff:"🔇 Stem: AF",
+  musicOn:"🎵 Musiek: AAN", musicOff:"🔕 Musiek: AF",
+  cadet:"Kadet Chloé", academy:"ROBOT-AKADEMIE", workshop:"🛠️ Werkswinkel",
+  missions:"🗺️ Missies", map:"🗺️ Kaart", wsTitle:"🛠️ Robot-werkswinkel",
+  back:"⬅️ Terug", next:"Volgende ➔", ready:"🚀 Gereed!", progLabel:"My robot se program:",
+  tapePh:"Tik op die knoppies om stappe by te voeg…", reset:"❌ Begin oor", undo:"⌫ Maak ongedaan", help:"💡 Hulp", run:"▶ LAAT LOOP!",
+  goF:"Ry Vooruit", turnL:"Draai Links", turnR:"Draai Regs",
+  mission:(a,b)=>`Missie ${a} van ${b}`, winTitle:"MISSIE VOLTOOI!", gradTitle:"🎓 JY HET DIT REGGEKRY!",
+  again:"🔁 Weer", nextBtn:"Volgende 🚀", toMap:"🗺️ Kaart", gotIt:"Reg so!",
+  guideH:"Ouergids vir afrigting 💡",
+  guideIntro:"Alles hier is gebou vir 'n 5-jarige wat pas met robotika begin. Niks hoef gelees te word nie, want die robot praat elke opdrag hardop.",
+  guideList:[
+    "<b>Hardeware:</b> Praat in die Werkswinkel oor <b>insette</b> (oë en sensors) en <b>uitsette</b> (wiele en hande). Robotte is nie toordery nie, dit is parte wat saamwerk.",
+    "<b>Volgorde:</b> Rekenaars doen stap 1, dan stap 2, in presiese volgorde. Tik op 'n stap op die programband om dit te verwyder.",
+    "<b>Links en regs:</b> Draaie is uit die <b>robot</b> se oogpunt. Die geel pyltjie wys waarheen hy kyk. Vra: <i>\"Watter een is die robot se regterhand?\"</i>",
+    "<b>Ontluis:</b> As die robot teen 'n rots stamp, sê <i>\"Jy het 'n foutjie gevind! Kom ons luis dit saam uit.\"</i> Die 💡 Hulp-knoppie wys die volgende stap om te probeer.",
+    "<b>Sterre:</b> 3 sterre = die kortste program. Speel weer met minder stappe om doeltreffendheid te leer.",
+    "<b>Privaatheid:</b> Werk heeltemal vanlyn. Vordering word net op hierdie toestel gestoor, met geen rekeninge en geen nasporing nie."
+  ],
+  worlds:["Weiveld-laboratorium","Kristalgrotte","Sterstasie"],
+  mapNew:"Kies missie een om te begin, Kadet Chloé!",
+  mapBack:"Welkom terug, Kadet Chloé! Kies 'n missie.",
+  locked:"Voltooi eers die vorige missie!",
+  memFull:"My geheue is vol! Kom ons toets eers hierdie stappe.",
+  crashStep:n=>`Stap ${n} stamp teen iets vas. Tik op die rooi stap om dit te verwyder!`,
+  alreadyThere:"Dit bereik alreeds die battery! Druk LAAT LOOP!",
+  resetTry:"Hmm, kom ons druk Begin oor en probeer weer.",
+  tryNext:w=>`Probeer ${w} volgende!`, tryFirst:w=>`Probeer ${w} eerste!`,
+  bonk:"Bons! Jy het 'n foutjie gevind. Ontluis-tyd! Tik op die rooi stap, of druk Hulp.",
+  almost:"Byna! Jou robot het voor die battery gestop. Voeg nog stappe by!",
+  win3opt:"Perfek! Dit is die kortste pad moontlik!",
+  win3:"Drie sterre! Briljante kodering, Chloé!",
+  win2:"Goed gedoen! Kan jy 'n selfs korter pad vind?",
+  win1:"Jy het dit reggekry! Probeer weer met minder stappe vir meer sterre!",
+  winSpeakLast:"Baie geluk Kadet Chloé! Jy is 'n amptelike Robot-kadet! Jy het by die Robot-akademie gegradueer!",
+  winSpeak3:"Missie voltooi! Drie sterre! Jy is 'n briljante ingenieur!",
+  winSpeakOther:"Missie voltooi! Goed gedoen, Kadet Chloé!",
+  winText:"Jou kode het die robot veilig by die huis gebring!",
+  certOff:"AMPTELIK", certName:"Robot-kadet Chloé", certGrad:"ROBOT-AKADEMIE-GRADUAND",
+  wsTabs:["1. Lyf","2. Beweeg","3. Oë","4. Hande","5. Verf"],
+  wsSay:[
+    "Hallo Kadet Chloé! Kies eers 'n lyf vir jou robot.",
+    "Kies nou hoe jou robot gaan beweeg!",
+    "Kies volgende oë en sensors sodat jou robot kan sien en hoor.",
+    "Kies nou hande sodat jou robot dinge kan optel.",
+    "Laaste stap! Verf jou robot jou gunstelingkleur."
+  ],
+  colors:["hemelblou","pienk","lemmetjiegroen","sonniggeel","pers","oranje"],
+  colorSay:c=>`${c}! Wat 'n mooi kleur.`,
+  hints:[
+    "Missie 1! Sê vir jou robot om vorentoe te ry tot by die battery.",
+    "Missie 2! Rotse is in die pad. Gaan om hulle tot by die battery.",
+    "Missie 3! 'n Hoë muur van rotse. Klim teen die kant op, draai dan.",
+    "Welkom by die Kristalgrotte! Dink aan jou robot se linker- en regterhand.",
+    "Die brug is geblok! Vind 'n veilige pad om die kristalle.",
+    "Jou robot kyk na die kristal! Draai eers, dan sig-sag tot by die battery.",
+    "Sterstasie! Volg die kronkelpad tot by die battery.",
+    "Die laaste missie! Twee groot mure. Vind die gapings tot by die battery."
+  ],
+  parts:{
+    chassis:[["Borrellyf","'n Ronde borrellyf! Glad en vinnig."],["Pantserboks","'n Pantserboks! 'n Sterk metaalraam beskerm die rekenaarsjirpies binne."],["Kuberpeul","'n Kuberpeul! Perfek om deur nou plekkies te glip."]],
+    locomotion:[["Tweelingwiele","Tweelingwiele! Motors draai die wiele sodat jou robot vinnig oor plat vloere kan ry."],["Tenkwiels","Tenkwiels! Hulle is oulik om oor stampperige grond te klim."],["Stapbene","Stapbene! Jou robot kan oor dinge stap, net soos jy."]],
+    sensors:[["Kamera-oë","Kamera-oë! Kameras is 'n robot-inset. Hulle help hom om kleure en vorms te sien."],["Sonar-antennas","Sonar-antennas! Hulle luister vir eggo's, soos 'n vlermuis."],["Laserkoepel","'n Laserkoepel! Dit draai rond om alles naby te karteer."]],
+    tools:[["Knyptange","Knyptange! Hulle kan dinge gryp, soos 'n krap."],["Bioniese hande","Bioniese hande! Vingers kan knoppies druk en hefbome trek."],["Elektromagneet","'n Elektromagneet! Dit trek metaaldinge nader."]]
+  }
+}};
+const T = k => STR[save.lang][k];
+function cmdName(c){ return c==='F'?T('goF'):c==='L'?T('turnL'):T('turnR'); }
+function setTalking(on){ document.querySelectorAll('.coach-av').forEach(e => e.classList.toggle('talking', on)); }
+let talkTimer = null, currentAudio = null;
+function stopAudio(){ try { if (currentAudio){ currentAudio.pause(); currentAudio = null; } } catch(e){} }
+
+/* High-quality voice layer:
+   1) If you drop studio MP3s in audio/en/<id>.mp3 or audio/af/<id>.mp3
+      (see tools/make_voice.py + audio/README.md), they play instead of the robot voice.
+   2) Otherwise falls back to device speechSynthesis with the RIGHT locale
+      (af-ZA for Afrikaans, en-ZA for English) so Afrikaans is never read
+      by an English voice. */
+let voiceEn = null, voiceAf = null, audioManifest = null;
 function pickVoice(){
   if (!('speechSynthesis' in window)) return;
   const vs = speechSynthesis.getVoices();
-  voiceObj = vs.find(v => /en[-_]ZA/i.test(v.lang)) ||
-             vs.find(v => /en[-_](GB|AU)/i.test(v.lang) && /female|google|samantha|serena|kate|karen|moira/i.test(v.name)) ||
-             vs.find(v => /^en/i.test(v.lang) && /female|samantha|google/i.test(v.name)) ||
-             vs.find(v => /^en/i.test(v.lang)) || null;
+  voiceAf = vs.find(v => /^af([-_]ZA)?$/i.test(v.lang)) ||
+            vs.find(v => /^af/i.test(v.lang)) || null;
+  voiceEn = vs.find(v => /en[-_]ZA/i.test(v.lang)) ||
+            vs.find(v => /en[-_](GB|AU)/i.test(v.lang) && /female|google|samantha|serena|kate|karen|moira/i.test(v.name)) ||
+            vs.find(v => /^en/i.test(v.lang) && /female|samantha|google/i.test(v.name)) ||
+            vs.find(v => /^en/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window){ speechSynthesis.onvoiceschanged = pickVoice; pickVoice(); }
-function setTalking(on){ document.querySelectorAll('.coach-av').forEach(e => e.classList.toggle('talking', on)); }
-let talkTimer = null;
-function speak(text){
-  if (!save.voice) return;
-  clearTimeout(talkTimer);
-  if (!('speechSynthesis' in window)) { setTalking(true); talkTimer = setTimeout(() => setTalking(false), text.length*55); return; }
+fetch('audio/manifest.json').then(r=>r.ok?r.json():null).then(m=>{audioManifest=m;}).catch(()=>{});
+function hasAudio(id){
+  return !!(audioManifest && audioManifest[save.lang] && audioManifest[save.lang].includes(id));
+}
+function speakTts(text){
+  if (!('speechSynthesis' in window)) { setTalking(true); talkTimer = setTimeout(() => setTalking(false), String(text).length*55); return; }
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = .92; u.pitch = 1.3; if (voiceObj) u.voice = voiceObj;
+  const u = new SpeechSynthesisUtterance(String(text));
+  if (save.lang === 'af'){ u.lang = 'af-ZA'; u.rate = .88; u.pitch = 1.15; if (voiceAf) u.voice = voiceAf; }
+  else { u.lang = 'en-ZA'; u.rate = .92; u.pitch = 1.3; if (voiceEn) u.voice = voiceEn; }
   u.onstart = () => setTalking(true);
   u.onend = u.onerror = () => setTalking(false);
   speechSynthesis.speak(u);
 }
+/* speakId: preferred path for ALL coach speech. id selects the MP3, text is the TTS fallback. */
+let lastSpeech = {id:'raw', text:''};
+function speakId(id, text){
+  if (!save.voice) return;
+  lastSpeech = {id, text};
+  clearTimeout(talkTimer);
+  stopAudio();
+  if (hasAudio(id)){
+    try {
+      currentAudio = new Audio(`audio/${save.lang}/${id}.mp3`);
+      currentAudio.onplay = () => setTalking(true);
+      currentAudio.onended = currentAudio.onerror = () => { setTalking(false); currentAudio = null; };
+      currentAudio.play().catch(()=>speakTts(text));
+      return;
+    } catch(e){ /* fall through to TTS */ }
+  }
+  speakTts(text);
+}
+function speak(text){ speakId('raw', text); }
 function refreshToggles(){
   const v = save.voice ? '🔊' : '🔇', m = save.music ? '🎵' : '🔕';
-  $('#btn-voice-title').textContent = `${v} Voice: ${save.voice?'ON':'OFF'}`;
-  $('#btn-music-title').textContent = `${m} Music: ${save.music?'ON':'OFF'}`;
+  $('#btn-voice-title').textContent = save.voice ? T('voiceOn') : T('voiceOff');
+  $('#btn-music-title').textContent = save.music ? T('musicOn') : T('musicOff');
   $('#btn-voice-map').textContent = v; $('#btn-music-map').textContent = m;
+  const langChip = save.lang === 'af' ? '🇿🇦 AF' : '🇬🇧 EN';
+  ['#btn-lang-map','#btn-lang-ws','#btn-lang-arena'].forEach(s=>{ const el=$(s); if(el) el.textContent=langChip; });
+  $('#btn-lang-en').classList.toggle('sel', save.lang==='en');
+  $('#btn-lang-af').classList.toggle('sel', save.lang==='af');
 }
-function toggleVoice(){ save.voice = !save.voice; if (!save.voice && 'speechSynthesis' in window) speechSynthesis.cancel(); persist(); refreshToggles(); sfx.tap(); }
+function toggleVoice(){ save.voice = !save.voice; if (!save.voice){ if ('speechSynthesis' in window) speechSynthesis.cancel(); stopAudio(); } persist(); refreshToggles(); sfx.tap(); }
 function toggleMusic(){ save.music = !save.music; save.music ? startMusic() : stopMusic(); persist(); refreshToggles(); sfx.tap(); }
+function setLang(lang){
+  save.lang = lang; persist();
+  document.documentElement.lang = lang === 'af' ? 'af' : 'en';
+  applyLang();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  stopAudio();
+}
+function applyLang(){
+  $('#title-sub').textContent = T('sub');
+  $('#lang-hint').textContent = T('choose');
+  $('#btn-play').textContent = T('play');
+  $('#btn-guide-title').textContent = T('guide');
+  $('#map-name').textContent = T('cadet');
+  $('#map-sub').textContent = T('academy');
+  $('#btn-to-workshop').textContent = T('workshop');
+  $('#btn-ws-back').textContent = T('missions');
+  $('#ws-title').textContent = T('wsTitle');
+  $('#ws-prev').textContent = T('back');
+  $('#btn-arena-back').textContent = T('map');
+  $('#prog-label').textContent = T('progLabel');
+  $('#btn-reset').textContent = T('reset');
+  $('#btn-undo').textContent = T('undo');
+  $('#btn-hint').textContent = T('help');
+  $('#btn-run').textContent = T('run');
+  $('#guide-h').textContent = T('guideH');
+  $('#guide-intro').textContent = T('guideIntro');
+  $('#guide-list').innerHTML = T('guideList').map(x=>`<li>${x}</li>`).join('');
+  $('#btn-guide-close').textContent = T('gotIt');
+  refreshToggles();
+  // re-render current screen text without speaking
+  if ($('#screen-map').classList.contains('active')) renderMap(true);
+  if ($('#screen-workshop').classList.contains('active')){ renderWsTabs(); renderWsParts(); renderPodium(); $('#ws-txt').textContent = STR[save.lang].wsSay[wsIdx]; $('#ws-next').textContent = wsIdx === wsSteps.length-1 ? T('ready') : T('next'); }
+  if ($('#screen-arena').classList.contains('active')){ renderTape(); renderPalette(); $('#arena-title').textContent = T('mission')(levelIdx+1, LEVELS.length); $('#arena-txt').textContent = STR[save.lang].hints[levelIdx]; }
+}
 
 /* =====================================================================
    2. BACKGROUND STARFIELD + PARTICLE FX
@@ -630,7 +859,7 @@ function renderWsTabs(){
   wsSteps.forEach((s,i) => {
     const b = document.createElement('button');
     b.className = 'tab' + (i === wsIdx ? ' active' : (i < wsIdx ? ' done' : ''));
-    b.textContent = (i < wsIdx ? '✅ ' : '') + s.tab;
+    b.textContent = (i < wsIdx ? '✅ ' : '') + T('wsTabs')[i];
     b.onclick = () => { sfx.tap(); setWsStep(i); };
     t.appendChild(b);
   });
@@ -638,32 +867,40 @@ function renderWsTabs(){
 function renderWsParts(){
   const key = wsSteps[wsIdx].key, box = $('#ws-parts');
   if (key === 'color'){
-    box.innerHTML = `<div class="parts">${COLORS.map((c,i) => `<button class="swatch ${save.cfg.color===c?'sel':''}" data-i="${i}" style="background:${c}" aria-label="${COLOR_NAMES[i]}"></button>`).join('')}</div>`;
+    const names = T('colors');
+    box.innerHTML = `<div class="parts">${COLORS.map((c,i) => `<button class="swatch ${save.cfg.color===c?'sel':''}" data-i="${i}" style="background:${c}" aria-label="${names[i]}"></button>`).join('')}</div>`;
     box.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
       const i = +b.dataset.i; save.cfg.color = COLORS[i]; persist(); sfx.pick();
-      renderWsParts(); renderPodium(); say('ws', `${COLOR_NAMES[i]}! What a great color.`);
+      renderWsParts(); renderPodium(); sayId('ws', `color-${i}`, T('colorSay')(names[i]));
     });
     return;
   }
-  box.innerHTML = `<div class="parts">${catalog[key].map(p => `
-    <button class="part ${save.cfg[key]===p.id?'sel':''}" data-id="${p.id}"><span class="ic">${p.ic}</span>${p.name}</button>`).join('')}</div>`;
+  box.innerHTML = `<div class="parts">${catalog[key].map((p,idx) => `
+    <button class="part ${save.cfg[key]===p.id?'sel':''}" data-id="${p.id}"><span class="ic">${p.ic}</span>${partName(key,idx)}</button>`).join('')}</div>`;
   box.querySelectorAll('.part').forEach(b => b.onclick = () => {
-    const p = catalog[key].find(x => x.id === b.dataset.id);
-    save.cfg[key] = p.id; persist(); sfx.pick(); renderWsParts(); renderPodium(); say('ws', p.say);
+    const idx = catalog[key].findIndex(x => x.id === b.dataset.id);
+    const p = catalog[key][idx];
+    save.cfg[key] = p.id; persist(); sfx.pick(); renderWsParts(); renderPodium(); sayId('ws', partKeyId(key,p.id), partSay(key,idx));
   });
 }
 function setWsStep(i, announce = true){
   wsIdx = Math.max(0, Math.min(i, wsSteps.length-1));
   renderWsTabs(); renderWsParts(); renderPodium();
   $('#ws-prev').style.display = wsIdx === 0 ? 'none' : 'flex';
-  $('#ws-next').textContent = wsIdx === wsSteps.length-1 ? '🚀 Ready!' : 'Next ➔';
-  if (announce) say('ws', wsSteps[wsIdx].say);
+  $('#ws-next').textContent = wsIdx === wsSteps.length-1 ? T('ready') : T('next');
+  if (announce) sayId('ws', `ws-step-${wsIdx}`, T('wsSay')[wsIdx]);
 }
 function openWorkshop(from){
   wsReturn = from || 'screen-map';
   showScreen('screen-workshop'); updateAvatars(); setWsStep(0);
 }
 function say(where, text){ $(`#${where}-txt`).textContent = text; speak(text); }
+function sayId(where, id, text){ $(`#${where}-txt`).textContent = text; speakId(id, text); }
+function partName(key, i){ return STR[save.lang].parts[key][i][0]; }
+function partSay(key, i){ return STR[save.lang].parts[key][i][1]; }
+function partKeyId(key, id){ return `part-${key}-${id}`; }
+function lvlHint(i){ return STR[save.lang].hints[i]; }
+function worldName(id){ return STR[save.lang].worlds[id-1]; }
 function updateAvatars(){
   const av = robotSVG(save.cfg);
   $('#ws-av').innerHTML = av; $('#arena-av').innerHTML = av; $('#title-bot').innerHTML = av;
@@ -739,13 +976,13 @@ function simulate(lv, prog){
    ===================================================================== */
 function totalStars(){ return save.stars.reduce((a,b) => a+b, 0); }
 function unlocked(i){ return i === 0 || save.stars[i-1] > 0; }
-function renderMap(){
+function renderMap(silent){
   $('#star-total').textContent = totalStars();
   const box = $('#worlds'); box.innerHTML = '';
   let nextIdx = save.stars.findIndex(s => s === 0); if (nextIdx < 0) nextIdx = -1;
   WORLDS.forEach(w => {
     const el = document.createElement('div'); el.className = `world w${w.id}`;
-    el.innerHTML = `<h3>${w.icon} ${w.name}</h3><div class="nodes"></div>`;
+    el.innerHTML = `<h3>${w.icon} ${worldName(w.id)}</h3><div class="nodes"></div>`;
     LEVELS.forEach((lv,i) => {
       if (lv.world !== w.id) return;
       const b = document.createElement('button');
@@ -755,7 +992,7 @@ function renderMap(){
         ? `${i+1}<span class="st">${'⭐'.repeat(st)}${'☆'.repeat(3-st)}</span>`
         : `<span class="lock">🔒</span>`;
       b.onclick = () => {
-        if (!open){ sfx.err(); speak("Finish the last mission first!"); return; }
+        if (!open){ sfx.err(); speakId('locked', T('locked')); return; }
         sfx.pick(); startLevel(i);
       };
       el.querySelector('.nodes').appendChild(b);
@@ -766,7 +1003,8 @@ function renderMap(){
 function openMap(){
   showScreen('screen-map'); renderMap();
   const t = totalStars();
-  speak(t === 0 ? "Pick mission one to start, Cadet Chloe!" : "Welcome back, Cadet Chloe! Pick a mission.");
+  const id = t === 0 ? 'map-new' : 'map-back';
+  speakId(id, t === 0 ? T('mapNew') : T('mapBack'));
 }
 
 /* =====================================================================
@@ -793,7 +1031,7 @@ function loadLevel(){
   bot = {...lv.start}; faceAngle = lv.start.dir * 90;
   cellPx = calcCell(lv.size);
   document.documentElement.style.setProperty('--cell', cellPx + 'px');
-  $('#arena-title').textContent = `Mission ${levelIdx+1} of ${LEVELS.length}`;
+  $('#arena-title').textContent = T('mission')(levelIdx+1, LEVELS.length);
   const st = save.stars[levelIdx]; $('#arena-stars').textContent = '⭐'.repeat(st) + '☆'.repeat(3-st);
   const g = $('#grid'); g.className = `w${lv.world}`;
   g.style.gridTemplateColumns = `repeat(${lv.size}, ${cellPx}px)`;
@@ -811,7 +1049,7 @@ function loadLevel(){
   g.appendChild(b);
   placeBot(true);
   renderTape(); renderPalette();
-  say('arena', lv.hint);
+  sayId('arena', `mission-${levelIdx}`, lvlHint(levelIdx));
 }
 function placeBot(instant){
   const b = $('#bot'), ring = $('#ring'); if (!b) return;
@@ -824,13 +1062,13 @@ function renderPalette(){
   const p = $('#palette'); p.innerHTML = '';
   ['L','F','R'].forEach(c => {
     const b = document.createElement('button'); b.className = `cmd ${c}`; b.id = `cmd-${c}`;
-    b.innerHTML = `${ICONS[c]}<span>${CMD_NAMES[c]}</span>`;
+    b.innerHTML = `${ICONS[c]}<span>${cmdName(c)}</span>`;
     b.onclick = () => addCmd(c); p.appendChild(b);
   });
 }
 function renderTape(badIdx = -1, runIdx = -1){
   const t = $('#tape'); t.innerHTML = '';
-  if (!program.length){ t.innerHTML = '<span class="ph">Tap the buttons to add steps…</span>'; return; }
+  if (!program.length){ t.innerHTML = `<span class="ph">${T('tapePh')}</span>`; return; }
   program.forEach((c,i) => {
     const d = document.createElement('div'); d.className = `tblock ${c}` + (i === badIdx ? ' bad' : '') + (i === runIdx ? ' running' : '');
     d.id = `tb-${i}`; d.innerHTML = ICONS[c];
@@ -840,7 +1078,7 @@ function renderTape(badIdx = -1, runIdx = -1){
 }
 function addCmd(c){
   if (busy) return;
-  if (program.length >= MAX_STEPS){ sfx.err(); say('arena', "My memory is full! Let's test these steps first."); return; }
+  if (program.length >= MAX_STEPS){ sfx.err(); sayId('arena','mem-full', T('memFull')); return; }
   sfx.tap(); program.push(c); renderTape();
 }
 function resetBot(){
@@ -854,16 +1092,16 @@ $('#btn-hint').onclick = () => {
   const lv = LEVELS[levelIdx], sim = simulate(lv, program);
   if (sim.crashAt >= 0){
     renderTape(sim.crashAt); sfx.err();
-    say('arena', `Step ${sim.crashAt+1} bumps into something. Tap the red step to remove it!`);
+    sayId('arena', 'hint-crash', T('crashStep')(sim.crashAt+1));
     return;
   }
-  if (sim.won){ say('arena', "That already reaches the battery! Press RUN!"); return; }
+  if (sim.won){ sayId('arena', 'hint-ready', T('alreadyThere')); return; }
   const path = solve(lv, sim.state);
-  if (!path || !path.length){ say('arena', "Hmm, let's press Reset and try again."); return; }
+  if (!path || !path.length){ sayId('arena', 'hint-reset', T('resetTry')); return; }
   const nxt = path[0], el = $(`#cmd-${nxt}`);
   el.classList.remove('hint'); void el.offsetWidth; el.classList.add('hint');
-  const word = { F:'Go Forward', L:'Turn Left', R:'Turn Right' }[nxt];
-  say('arena', program.length ? `Try ${word} next!` : `Try ${word} first!`);
+  const word = cmdName(nxt);
+  sayId('arena', `hint-${nxt.toLowerCase()}`, program.length ? T('tryNext')(word) : T('tryFirst')(word));
 };
 $('#btn-run').onclick = runProgram;
 
@@ -887,7 +1125,7 @@ async function runProgram(){
         const g = $('#grid'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake');
         const r = b.getBoundingClientRect(); burst(r.left + r.width/2, r.top + r.height/2, 14, ['#ff9a9a','#ffd166','#fff']);
         renderTape(i);
-        say('arena', "Bonk! You found a bug. Debug time! Tap the red step, or press Help.");
+        sayId('arena', 'bonk', T('bonk'));
         busy = false; return;
       }
       bot.x = nx; bot.y = ny; sfx.move(); placeBot();
@@ -899,7 +1137,7 @@ async function runProgram(){
     if (bot.x === lv.goal.x && bot.y === lv.goal.y){ renderTape(-1, i); await winLevel(i+1); return; }
   }
   renderTape(); busy = false;
-  say('arena', "Almost! Your robot stopped before the battery. Add more steps!");
+  sayId('arena', 'almost', T('almost'));
 }
 
 /* =====================================================================
@@ -915,23 +1153,24 @@ async function winLevel(stepsUsed){
   confetti();
   const last = levelIdx === LEVELS.length - 1;
   $('#win-chloe-wrap').innerHTML = chloeSVG({pose:'cheer'}).replace('class="chloe"', 'class="chloe win-chloe"');
-  $('#win-title').textContent = last ? '🎓 YOU DID IT!' : 'MISSION COMPLETE!';
+  $('#win-title').textContent = last ? T('gradTitle') : T('winTitle');
   const msgs = {
-    3: stepsUsed === opt ? "Perfect! That is the shortest way possible!" : "Three stars! Brilliant coding, Chloe!",
-    2: "Great job! Can you find an even shorter way?",
-    1: "You did it! Try again with fewer steps for more stars!"
+    3: stepsUsed === opt ? T('win3opt') : T('win3'),
+    2: T('win2'),
+    1: T('win1')
   };
   $('#win-text').textContent = msgs[stars];
   const cert = $('#win-cert');
   if (last){
     cert.style.display = 'block';
-    cert.innerHTML = `<div class="cert"><h3>OFFICIAL</h3><div class="nm">Robot Cadet Chloe</div><h3>ROBOT ACADEMY GRADUATE</h3>
-      <div style="font-size:.9rem;color:#8a6200;margin-top:4px">${new Date().toLocaleDateString('en-ZA',{day:'numeric',month:'long',year:'numeric'})} · ⭐ ${totalStars()}/24</div></div>`;
+    cert.innerHTML = `<div class="cert"><h3>${T('certOff')}</h3><div class="nm">${T('certName')}</div><h3>${T('certGrad')}</h3>
+      <div style="font-size:.9rem;color:#8a6200;margin-top:4px">${new Date().toLocaleDateString(save.lang==='af'?'af-ZA':'en-ZA',{day:'numeric',month:'long',year:'numeric'})} · ⭐ ${totalStars()}/24</div></div>`;
   } else cert.style.display = 'none';
-  $('#win-next').textContent = last ? '🗺️ Map' : 'Next 🚀';
+  $('#win-next').textContent = last ? T('toMap') : T('nextBtn');
+  $('#win-replay').textContent = T('again');
   const row = $('#win-stars'); row.querySelectorAll('span').forEach(s => s.classList.remove('on'));
   $('#modal-win').classList.add('show'); busy = false;
-  speak(last ? "Congratulations Cadet Chloe! You are an official Robot Cadet! You graduated from Robot Academy!" : stars === 3 ? "Mission complete! Three stars! You are a brilliant engineer!" : "Mission complete! Well done, Cadet Chloe!");
+  speakId(last ? 'win-last' : (stars === 3 ? 'win-3' : 'win-other'), last ? T('winSpeakLast') : stars === 3 ? T('winSpeak3') : T('winSpeakOther'));
   for (let i = 0; i < stars; i++){ await sleep(450); row.children[i].classList.add('on'); sfx.star(i); }
 }
 $('#win-replay').onclick = () => { $('#modal-win').classList.remove('show'); sfx.tap(); loadLevel(); };
@@ -949,13 +1188,16 @@ $('#btn-play').onclick = () => {
   const first = totalStars() === 0 && JSON.stringify(save.cfg) === JSON.stringify({chassis:'round',locomotion:'wheels',sensors:'visor',tools:'claws',color:'#48bfe3'});
   if (first){ openWorkshop('screen-map'); } else { updateAvatars(); openMap(); }
 };
+$('#btn-lang-en').onclick = () => { audio(); sfx.pick(); setLang('en'); };
+$('#btn-lang-af').onclick = () => { audio(); sfx.pick(); setLang('af'); };
+['#btn-lang-map','#btn-lang-ws','#btn-lang-arena'].forEach(s=>{ $(s).onclick = () => { sfx.tap(); setLang(save.lang==='en'?'af':'en'); }; });
 $('#ws-next').onclick = () => { sfx.tap(); if (wsIdx < wsSteps.length-1) setWsStep(wsIdx+1); else { updateAvatars(); sfx.win(); openMap(); } };
 $('#ws-prev').onclick = () => { sfx.tap(); setWsStep(wsIdx-1); };
 $('#btn-ws-back').onclick = () => { sfx.tap(); updateAvatars(); openMap(); };
 $('#btn-to-workshop').onclick = () => { sfx.tap(); openWorkshop('screen-map'); };
 $('#btn-arena-back').onclick = () => { sfx.tap(); runToken++; busy = false; openMap(); };
-$('#ws-coach').onclick = () => speak($('#ws-txt').textContent);
-$('#arena-coach').onclick = () => speak($('#arena-txt').textContent);
+$('#ws-coach').onclick = () => { if (lastSpeech.text) speakId(lastSpeech.id, lastSpeech.text); else speak($('#ws-txt').textContent); };
+$('#arena-coach').onclick = () => { if (lastSpeech.text) speakId(lastSpeech.id, lastSpeech.text); else speak($('#arena-txt').textContent); };
 $('#btn-voice-title').onclick = $('#btn-voice-map').onclick = toggleVoice;
 $('#btn-music-title').onclick = $('#btn-music-map').onclick = toggleMusic;
 $('#btn-guide-title').onclick = () => $('#modal-guide').classList.add('show');
@@ -970,7 +1212,7 @@ addEventListener('resize', () => {
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopMusic(); if ('speechSynthesis' in window) speechSynthesis.cancel(); } else if (save.music && audio() && $('#screen-title').classList.contains('active') === false) startMusic(); });
 
-loadSave(); sizeCanvases(); refreshToggles();
+loadSave(); sizeCanvases(); applyLang();
 $('#title-chloe').innerHTML = chloeSVG();
 $('#map-face').innerHTML = chloeSVG({crop:true});
 updateAvatars();
