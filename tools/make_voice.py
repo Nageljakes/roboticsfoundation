@@ -31,10 +31,16 @@ AUDIO = ROOT / "audio"
 
 VOICES = {"af": "af-ZA-AdriNeural", "en": "en-ZA-LibbyNeural"}
 
+# Chloé is pronounced "Chloe" (English KLOH-ee) but spelled Chloé. The Afrikaans
+# voice reads "Chloé" with French rules (kloh-AY). "Kloei" makes AdriNeural say
+# it right in Afrikaans (koei/moei rule -> kloo-ee). Screen text keeps "Chloé";
+# only the spoken MP3s use this alias.
+CHLOE_AF = "Kloei"
+
 # (id, en_text, af_text) — must match speakId() ids in index.html
 LINES = [
-    ("map-new", "Pick mission one to start, Cadet Chloe!", "Kies missie een om te begin, Kadet Chloé!"),
-    ("map-back", "Welcome back, Cadet Chloe! Pick a mission.", "Welkom terug, Kadet Chloé! Kies 'n missie."),
+    ("map-new", "Pick mission one to start, Cadet Chloe!", f"Kies missie een om te begin, Kadet {CHLOE_AF}!"),
+    ("map-back", "Welcome back, Cadet Chloe! Pick a mission.", f"Welkom terug, Kadet {CHLOE_AF}! Kies 'n missie."),
     ("locked", "Finish the last mission first!", "Voltooi eers die vorige missie!"),
     ("mem-full", "My memory is full! Let's test these steps first.", "My geheue is vol! Kom ons toets eers hierdie stappe."),
     ("bonk", "Bonk! You found a bug. Debug time! Tap the red step, or press Help.", "Bons! Jy het 'n foutjie gevind. Ontluis-tyd! Tik op die rooi stap, of druk Hulp."),
@@ -45,10 +51,10 @@ LINES = [
     ("hint-f", "Try Go Forward next!", "Probeer Ry Vooruit volgende!"),
     ("hint-l", "Try Turn Left next!", "Probeer Draai Links volgende!"),
     ("hint-r", "Try Turn Right next!", "Probeer Draai Regs volgende!"),
-    ("win-last", "Congratulations Cadet Chloe! You are an official Robot Cadet! You graduated from Robot Academy!", "Baie geluk Kadet Chloé! Jy is 'n amptelike Robot-kadet! Jy het by die Robot-akademie gegradueer!"),
+    ("win-last", "Congratulations Cadet Chloe! You are an official Robot Cadet! You graduated from Robot Academy!", f"Baie geluk Kadet {CHLOE_AF}! Jy is 'n amptelike Robot-kadet! Jy het by die Robot-akademie gegradueer!"),
     ("win-3", "Mission complete! Three stars! You are a brilliant engineer!", "Missie voltooi! Drie sterre! Jy is 'n briljante ingenieur!"),
-    ("win-other", "Mission complete! Well done, Cadet Chloe!", "Missie voltooi! Goed gedoen, Kadet Chloé!"),
-    ("ws-step-0", "Hello Cadet Chloe! First, choose a body for your robot.", "Hallo Kadet Chloé! Kies eers 'n lyf vir jou robot."),
+    ("win-other", "Mission complete! Well done, Cadet Chloe!", f"Missie voltooi! Goed gedoen, Kadet {CHLOE_AF}!"),
+    ("ws-step-0", "Hello Cadet Chloe! First, choose a body for your robot.", f"Hallo Kadet {CHLOE_AF}! Kies eers 'n lyf vir jou robot."),
     ("ws-step-1", "Now choose how your robot will move!", "Kies nou hoe jou robot gaan beweeg!"),
     ("ws-step-2", "Next, choose eyes and sensors so your robot can see and hear.", "Kies volgende oë en sensors sodat jou robot kan sien en hoor."),
     ("ws-step-3", "Now choose hands so your robot can pick things up.", "Kies nou hande sodat jou robot dinge kan optel."),
